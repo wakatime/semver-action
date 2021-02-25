@@ -1,0 +1,10 @@
+.git/
+
+# Build related files
+build
+
+# Other files
+Dockerfile
+README.md
+LICENSE
+action.yml

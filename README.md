@@ -5,7 +5,6 @@ This action calculates the next version relying on semantic versioning.
 ## Github Environment Variables
 
 - `GITHUB_SHA`
-- `GITHUB_REPOSITORY`
 
 ## Branch Names
 
@@ -93,18 +92,6 @@ Let's assume the default values for the scenarios below:
 
 **Optional** The development branch name. Defaults to `develop`.
 
-### dry_run
-
-**Optional** When true only prints the calculated semantic version. Defaults to `false`.
-
-### tag_message
-
-**Optional** Tag message. Defaults to `auto tag`.
-
-### auth_token
-
-Authorization token to authenticate through the Api. Only required when dry_run is set to false.
-
 ### debug
 
 **Optional** Enables debug mode. Defaults to false.
@@ -114,6 +101,10 @@ Authorization token to authenticate through the Api. Only required when dry_run 
 ### semver_tag
 
 The calculdated semantic version.
+
+### is_prerelease
+
+Returns if calculated tag is pre-release.
 
 ### previous_tag
 
@@ -127,19 +118,19 @@ Uses `auto` strategy to calculate the next semantic version.
 
 ```yaml
 uses: wakatime/semver-action@v0.1.0
-  with:
-    auth_token: "token"
 ```
 
-### Dry Run
-
-Do not push the created tag and write to output as `semver_tag`.
+### Custom
 
 ```yaml
 id: semver-tag
 uses: wakatime/semver-action@v0.1.0
   with:
-    dry_run: "true"
+    prefix: ""
+    prerelease_id: "alpha"
+    main_branch_name: "trunk"
+    develop_branch_name: "dev"
+    debug: "true"
 - name: "Created tag"
   run: echo "tag ${{ steps.semver-tag.outputs.semver_tag }}"
 ```

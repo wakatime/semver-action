@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"strings"
 
-	ghtag "github.com/wakatime/semver-action/cmd/tag"
 	"github.com/wakatime/semver-action/pkg/exitcode"
 	"github.com/wakatime/semver-action/pkg/git"
 
@@ -76,6 +75,7 @@ func Run() {
 	}
 
 	// Print current tag.
+	log.Infof("PREVIOUS_TAG: %s", p.Prefix+tag.String())
 	fmt.Printf("::set-output name=PREVIOUS_TAG::%s\n", p.Prefix+tag.String())
 
 	if tagSource != "git" {
@@ -109,9 +109,14 @@ func Run() {
 		}
 	}
 
-	var finalTag string
+	var (
+		finalTag     string
+		isPrerelease bool
+	)
 
 	if method == "build" {
+		isPrerelease = true
+
 		buildNumber, _ := semver.NewPRVersion("0")
 
 		if len(tag.Pre) > 1 && version == "" {
@@ -145,24 +150,11 @@ func Run() {
 		finalTag = p.Prefix + tag.FinalizeVersion()
 	}
 
-	// Create tag locally and push it.
-	if !p.DryRun {
-		err := ghtag.Create(ghtag.Params{
-			CommitSha:  p.CommitSha,
-			Client:     p.Client,
-			Owner:      p.Owner,
-			Repository: p.Repository,
-			TagMessage: p.TagMessage,
-			Tag:        finalTag,
-		})
-		if err != nil {
-			log.Error(err.Error())
-
-			os.Exit(exitcode.ErrDefault)
-		}
-	}
-
+	log.Infof("SEMVER_TAG: %s", finalTag)
 	fmt.Printf("::set-output name=SEMVER_TAG::%s\n", finalTag)
+
+	log.Infof("IS_PRERELEASE: %v", isPrerelease)
+	fmt.Printf("::set-output name=IS_PRERELEASE::%v\n", isPrerelease)
 
 	os.Exit(exitcode.Success)
 }

@@ -6,7 +6,7 @@ import (
 	"github.com/alecthomas/assert"
 )
 
-func TestDefineBumpStrategy(t *testing.T) {
+func TestDetermineBumpStrategy(t *testing.T) {
 	tests := map[string]struct {
 		SourceBranch    string
 		DestBranch      string
@@ -68,7 +68,7 @@ func TestDefineBumpStrategy(t *testing.T) {
 
 	for name, value := range tests {
 		t.Run(name, func(t *testing.T) {
-			method, version := defineBumpStrategy(value.Bump, value.SourceBranch, value.DestBranch, "master", "develop")
+			method, version := determineBumpStrategy(value.Bump, value.SourceBranch, value.DestBranch, "master", "develop")
 
 			assert.Equal(t, value.ExpectedMethod, method)
 			assert.Equal(t, value.ExpectedVersion, version)

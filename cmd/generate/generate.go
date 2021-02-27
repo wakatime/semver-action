@@ -8,11 +8,17 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/wakatime/semver-action/pkg/exitcode"
 	"github.com/wakatime/semver-action/pkg/git"
 
 	"github.com/apex/log"
 	"github.com/blang/semver/v4"
+)
+
+const (
+	// Success is used when a no error happens.
+	Success = 0
+	// ErrDefault is used for general errors.
+	ErrDefault = 1
 )
 
 var (
@@ -34,7 +40,7 @@ func Run() {
 	if err != nil {
 		log.Fatalf("failed to load parameters: %s\n", err)
 
-		os.Exit(exitcode.ErrDefault)
+		os.Exit(ErrDefault)
 	}
 
 	if p.Debug {
@@ -47,7 +53,7 @@ func Run() {
 	if !git.IsRepo() {
 		log.Fatal("current folder is not a git repository")
 
-		os.Exit(exitcode.ErrDefault)
+		os.Exit(ErrDefault)
 	}
 
 	tagSource := "git"
@@ -60,12 +66,12 @@ func Run() {
 	if err != nil {
 		log.Errorf("failed extracting source and dest branches from commit: %s", err)
 
-		os.Exit(exitcode.ErrDefault)
+		os.Exit(ErrDefault)
 	}
 
 	log.Debugf("source branch: %q, dest branch: %q\n", source, dest)
 
-	method, version := defineBumpStrategy(p.Bump, source, dest, p.MainBranchName, p.DevelopBranchName)
+	method, version := determineBumpStrategy(p.Bump, source, dest, p.MainBranchName, p.DevelopBranchName)
 
 	log.Debugf("method: %q, version: %q", method, version)
 
@@ -87,7 +93,7 @@ func Run() {
 		if err := tag.IncrementMajor(); err != nil {
 			log.Errorf("failed to increment major version: %s", err)
 
-			os.Exit(exitcode.ErrDefault)
+			os.Exit(ErrDefault)
 		}
 	}
 
@@ -96,7 +102,7 @@ func Run() {
 		if err := tag.IncrementMinor(); err != nil {
 			log.Errorf("failed to increment minor version: %s", err)
 
-			os.Exit(exitcode.ErrDefault)
+			os.Exit(ErrDefault)
 		}
 	}
 
@@ -105,7 +111,7 @@ func Run() {
 		if err := tag.IncrementPatch(); err != nil {
 			log.Errorf("failed to increment patch version: %s", err)
 
-			os.Exit(exitcode.ErrDefault)
+			os.Exit(ErrDefault)
 		}
 	}
 
@@ -129,7 +135,7 @@ func Run() {
 		if err != nil {
 			log.Errorf("failed to create new pre-release version: %s", err)
 
-			os.Exit(exitcode.ErrDefault)
+			os.Exit(ErrDefault)
 		}
 
 		tag.Pre = append(tag.Pre, preVersion)
@@ -138,7 +144,7 @@ func Run() {
 		if err != nil {
 			log.Errorf("failed to create new build version: %s", err)
 
-			os.Exit(exitcode.ErrDefault)
+			os.Exit(ErrDefault)
 		}
 
 		tag.Pre = append(tag.Pre, buildVersion)
@@ -156,41 +162,41 @@ func Run() {
 	log.Infof("IS_PRERELEASE: %v", isPrerelease)
 	fmt.Printf("::set-output name=IS_PRERELEASE::%v\n", isPrerelease)
 
-	os.Exit(exitcode.Success)
+	os.Exit(Success)
 }
 
-// defineBumpStrategy defines the strategy for semver to bump product version.
-func defineBumpStrategy(bump, sourceBranch, destBranch, mainBranchName, developBranchName string) (string, string) {
-	if bump == "auto" {
-		// bugfix into develop branch
-		if branchBugfixPrefixRegex.MatchString(sourceBranch) && destBranch == developBranchName {
-			return "build", "patch"
-		}
-
-		// feature into develop
-		if branchFeaturePrefixRegex.MatchString(sourceBranch) && destBranch == developBranchName {
-			return "build", "minor"
-		}
-
-		// major into develop
-		if branchMajorPrefixRegex.MatchString(sourceBranch) && destBranch == developBranchName {
-			return "build", "major"
-		}
-
-		// hotfix into main branch
-		if branchHotfixPrefixRegex.MatchString(sourceBranch) && destBranch == mainBranchName {
-			return "hotfix", ""
-		}
-
-		// develop branch into main branch
-		if sourceBranch == developBranchName && destBranch == mainBranchName {
-			return "final", ""
-		}
-
-		return "build", ""
+// determineBumpStrategy determines the strategy for semver to bump product version.
+func determineBumpStrategy(bump, sourceBranch, destBranch, mainBranchName, developBranchName string) (string, string) {
+	if bump != "auto" {
+		return bump, ""
 	}
 
-	return bump, ""
+	// bugfix into develop branch
+	if branchBugfixPrefixRegex.MatchString(sourceBranch) && destBranch == developBranchName {
+		return "build", "patch"
+	}
+
+	// feature into develop
+	if branchFeaturePrefixRegex.MatchString(sourceBranch) && destBranch == developBranchName {
+		return "build", "minor"
+	}
+
+	// major into develop
+	if branchMajorPrefixRegex.MatchString(sourceBranch) && destBranch == developBranchName {
+		return "build", "major"
+	}
+
+	// hotfix into main branch
+	if branchHotfixPrefixRegex.MatchString(sourceBranch) && destBranch == mainBranchName {
+		return "hotfix", ""
+	}
+
+	// develop branch into main branch
+	if sourceBranch == developBranchName && destBranch == mainBranchName {
+		return "final", ""
+	}
+
+	return "build", ""
 }
 
 func getBranchesFromCommit(hash string) (string, string, error) {

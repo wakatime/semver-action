@@ -21,6 +21,7 @@ var (
 // Params contains semver generate command parameters.
 type Params struct {
 	CommitSha         string
+	RepoDir           string
 	Bump              string
 	BaseVersion       *semver.Version
 	Prefix            string
@@ -40,6 +41,12 @@ func LoadParams() (Params, error) {
 		}
 
 		commitSha = commitShaStr
+	}
+
+	var repoDir string = "."
+
+	if repoDirStr := actions.GetInput("repo_dir"); repoDirStr != "" {
+		repoDir = repoDirStr
 	}
 
 	var bump string = "auto"
@@ -63,9 +70,18 @@ func LoadParams() (Params, error) {
 		debug = parsed
 	}
 
+	var prefix string = "v"
+
+	if prefixStr := actions.GetInput("prefix"); prefixStr != "" {
+		prefix = prefixStr
+	}
+
 	var baseVersion *semver.Version
 
 	if baseVersionStr := actions.GetInput("base_version"); baseVersionStr != "" {
+		prefixRe := regexp.MustCompile(fmt.Sprintf("^%s", prefix))
+		baseVersionStr = prefixRe.ReplaceAllLiteralString(baseVersionStr, "")
+
 		parsed, err := semver.Parse(baseVersionStr)
 		if err != nil {
 			return Params{}, fmt.Errorf("invalid base_version format: %s", baseVersionStr)
@@ -86,12 +102,6 @@ func LoadParams() (Params, error) {
 		developBranchName = developBranchNameStr
 	}
 
-	var prefix string = "v"
-
-	if prefixStr := actions.GetInput("prefix"); prefixStr != "" {
-		prefix = prefixStr
-	}
-
 	var prereleaseID string = "pre"
 
 	if prereleaseIDStr := actions.GetInput("prerelease_id"); prereleaseIDStr != "" {
@@ -100,6 +110,7 @@ func LoadParams() (Params, error) {
 
 	return Params{
 		CommitSha:         commitSha,
+		RepoDir:           repoDir,
 		Bump:              bump,
 		BaseVersion:       baseVersion,
 		Prefix:            prefix,
@@ -128,12 +139,16 @@ func (p Params) String() string {
 
 	return fmt.Sprintf(
 		"commit sha: %q, bump: %q, base version: %q, prefix: %q,"+
-			" prerelease id: %q, debug: %t\n",
+			" prerelease id: %q, main branch name: %s, develop branch name: %s,"+
+			" repo dir: %s, debug: %t\n",
 		p.CommitSha,
 		p.Bump,
 		baseVersion,
 		p.Prefix,
 		p.PrereleaseID,
+		p.MainBranchName,
+		p.DevelopBranchName,
+		p.RepoDir,
 		p.Debug,
 	)
 }

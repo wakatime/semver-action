@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
-	"strings"
 
 	"github.com/wakatime/semver-action/pkg/git"
 
@@ -28,7 +27,7 @@ const tagDefault = "0.0.0"
 type gitClient interface {
 	CurrentBranch() (string, error)
 	IsRepo() bool
-	LatestTag() string
+	LatestTag(prefix string) (*semver.Version, error)
 	SourceBranch(commitHash string) (string, error)
 }
 
@@ -88,9 +87,12 @@ func Tag(params Params, gc gitClient) (Result, error) {
 
 	log.Debugf("method: %q, version: %q", method, version)
 
-	tag, err := determineLatestTag(params.Prefix, gc)
+	tag, err := gc.LatestTag(params.Prefix)
 	if err != nil {
 		return Result{}, fmt.Errorf("failed getting latest tag: %s", err)
+	}
+	if tag == nil {
+		tag, _ = semver.New(tagDefault)
 	}
 
 	previousTag := params.Prefix + tag.String()
@@ -169,22 +171,6 @@ func Tag(params Params, gc gitClient) (Result, error) {
 	}, nil
 }
 
-// determineLatestTag determines if the latest tag is valid or not otherwise returns 0.0.0.
-func determineLatestTag(prefix string, gc gitClient) (*semver.Version, error) {
-	tag := gc.LatestTag()
-	if tag != "" {
-		tag = strings.TrimPrefix(tag, prefix)
-		parsed, err := semver.New(tag)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse tag %q or not valid semantic version: %s", tag, err)
-		}
-
-		return parsed, nil
-	}
-
-	return semverPtr(semver.MustParse(tagDefault)), nil
-}
-
 // determineBumpStrategy determines the strategy for semver to bump product version.
 func determineBumpStrategy(bump, sourceBranch, destBranch, mainBranchName, developBranchName string) (string, string) {
 	if bump != "auto" {
@@ -217,9 +203,4 @@ func determineBumpStrategy(bump, sourceBranch, destBranch, mainBranchName, devel
 	}
 
 	return "build", ""
-}
-
-// semverPtr returns a pointer to the Semver value passed in.
-func semverPtr(v semver.Version) *semver.Version {
-	return &v
 }

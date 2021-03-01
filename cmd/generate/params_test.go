@@ -32,23 +32,23 @@ func TestLoadParams_PrereleaseID(t *testing.T) {
 }
 
 func TestLoadParams_MainBranchName(t *testing.T) {
-	os.Setenv("INPUT_MAIN_BRANCH_NAME", "master")
+	os.Setenv("INPUT_MAIN_BRANCH_NAME", "main")
 	defer os.Unsetenv("INPUT_MAIN_BRANCH_NAME")
 
 	params, err := generate.LoadParams()
 	require.NoError(t, err)
 
-	assert.Equal(t, "master", params.MainBranchName)
+	assert.Equal(t, "main", params.MainBranchName)
 }
 
 func TestLoadParams_DevelopBranchName(t *testing.T) {
-	os.Setenv("INPUT_DEVELOP_BRANCH_NAME", "develop")
+	os.Setenv("INPUT_DEVELOP_BRANCH_NAME", "dev")
 	defer os.Unsetenv("INPUT_DEVELOP_BRANCH_NAME")
 
 	params, err := generate.LoadParams()
 	require.NoError(t, err)
 
-	assert.Equal(t, "develop", params.DevelopBranchName)
+	assert.Equal(t, "dev", params.DevelopBranchName)
 }
 
 func TestLoadParams_CommitSha(t *testing.T) {
@@ -67,6 +67,16 @@ func TestLoadParams_InvalidCommitSha(t *testing.T) {
 
 	_, err := generate.LoadParams()
 	require.Error(t, err)
+}
+
+func TestLoadParams_RepoDir(t *testing.T) {
+	os.Setenv("INPUT_REPO_DIR", "/var/tmp/wakatime-cli")
+	defer os.Unsetenv("INPUT_REPO_DIR")
+
+	params, err := generate.LoadParams()
+	require.NoError(t, err)
+
+	assert.Equal(t, "/var/tmp/wakatime-cli", params.RepoDir)
 }
 
 func TestLoadParams_Bump(t *testing.T) {
@@ -112,7 +122,7 @@ func TestLoadParams_BaseVersion(t *testing.T) {
 }
 
 func TestLoadParams_InvalidBaseVersion(t *testing.T) {
-	os.Setenv("INPUT_BASE_VERSION", "any")
+	os.Setenv("INPUT_BASE_VERSION", "invalid")
 	defer os.Unsetenv("INPUT_BASE_VERSION")
 
 	_, err := generate.LoadParams()

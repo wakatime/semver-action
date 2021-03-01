@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/apex/log"
+	"github.com/blang/semver/v4"
 )
 
 var mergePRRegex = regexp.MustCompile(`Merge pull request #([0-9])+ from (?P<source>.*)+`) // nolint
@@ -124,7 +125,11 @@ func (c *Client) SourceBranch(commitHash string) (string, error) {
 }
 
 // LatestTag returns the latest tag if found.
-func (c *Client) LatestTag() string {
+func (c *Client) LatestTag(prefix string) (*semver.Version, error) {
+	var (
+		prefixRe = regexp.MustCompile(fmt.Sprintf("^%s", prefix))
+	)
+
 	for _, fn := range []func() (string, error){
 		func() (string, error) {
 			return c.Clean(c.Run("-C", c.repoDir, "tag", "--points-at", "HEAD", "--sort", "-version:creatordate"))
@@ -135,9 +140,14 @@ func (c *Client) LatestTag() string {
 	} {
 		tagStr, _ := fn()
 		if tagStr != "" {
-			return tagStr
+			tagStr = prefixRe.ReplaceAllLiteralString(tagStr, "")
+			parsed, err := semver.Parse(tagStr)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse tag %q or not valid semantic version: %s", tagStr, err)
+			}
+			return &parsed, nil
 		}
 	}
 
-	return ""
+	return nil, nil
 }

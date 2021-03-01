@@ -3,7 +3,6 @@ package generate
 import (
 	"errors"
 	"fmt"
-	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -12,13 +11,6 @@ import (
 
 	"github.com/apex/log"
 	"github.com/blang/semver/v4"
-)
-
-const (
-	// Success is used when a no error happens.
-	Success = 0
-	// ErrDefault is used for general errors.
-	ErrDefault = 1
 )
 
 var (
@@ -34,13 +26,18 @@ var (
 	mergePRRegex = regexp.MustCompile(`Merge pull request #([0-9])+ from (?P<source>.*)+`)
 )
 
+// Result contains the result of Run().
+type Result struct {
+	PreviousTag  string
+	SemverTag    string
+	IsPrerelease bool
+}
+
 // Run generates a semantic version using the commit sha.
-func Run() {
+func Run() (Result, error) {
 	p, err := LoadParams()
 	if err != nil {
-		log.Fatalf("failed to load parameters: %s\n", err)
-
-		os.Exit(ErrDefault)
+		return Result{}, fmt.Errorf("failed to load parameters: %s", err)
 	}
 
 	if p.Debug {
@@ -51,9 +48,7 @@ func Run() {
 	log.Debug(p.String())
 
 	if !git.IsRepo() {
-		log.Fatal("current folder is not a git repository")
-
-		os.Exit(ErrDefault)
+		return Result{}, fmt.Errorf("current folder is not a git repository")
 	}
 
 	tagSource := "git"
@@ -62,11 +57,9 @@ func Run() {
 		tagSource = "parameter"
 	}
 
-	source, dest, err := getBranchesFromCommit(p.CommitSha)
+	source, dest, err := getBranchesFromCommit(p.CommitSha, p.RepoDir)
 	if err != nil {
-		log.Errorf("failed extracting source and dest branches from commit: %s", err)
-
-		os.Exit(ErrDefault)
+		return Result{}, fmt.Errorf("failed extracting source and dest branches from commit: %s", err)
 	}
 
 	log.Debugf("source branch: %q, dest branch: %q\n", source, dest)
@@ -75,43 +68,35 @@ func Run() {
 
 	log.Debugf("method: %q, version: %q", method, version)
 
-	tag, err := getLatestTagOrDefault(p.Prefix)
+	tag, err := getLatestTagOrDefault(p.Prefix, p.RepoDir)
 	if err != nil {
-		log.Errorf("failed getting latest tag: %s", err)
+		return Result{}, fmt.Errorf("failed getting latest tag: %s", err)
 	}
 
-	// Print current tag.
-	log.Infof("PREVIOUS_TAG: %s", p.Prefix+tag.String())
-	fmt.Printf("::set-output name=PREVIOUS_TAG::%s\n", p.Prefix+tag.String())
+	previousTag := p.Prefix + tag.String()
 
 	if tagSource != "git" {
 		tag = p.BaseVersion
 	}
 
-	if tagSource == "git" && version == "major" && method == "build" {
+	if (version == "major" && method == "build") || method == "major" {
 		log.Debug("incrementing major")
 		if err := tag.IncrementMajor(); err != nil {
-			log.Errorf("failed to increment major version: %s", err)
-
-			os.Exit(ErrDefault)
+			return Result{}, fmt.Errorf("failed to increment major version: %s", err)
 		}
 	}
 
-	if tagSource == "git" && version == "minor" && method == "build" {
+	if (version == "minor" && method == "build") || method == "minor" {
 		log.Debug("incrementing minor")
 		if err := tag.IncrementMinor(); err != nil {
-			log.Errorf("failed to increment minor version: %s", err)
-
-			os.Exit(ErrDefault)
+			return Result{}, fmt.Errorf("failed to increment minor version: %s", err)
 		}
 	}
 
-	if tagSource == "git" && (version == "patch" && method == "build") || method == "hotfix" {
+	if (version == "patch" && method == "build") || method == "patch" || method == "hotfix" {
 		log.Debug("incrementing patch")
 		if err := tag.IncrementPatch(); err != nil {
-			log.Errorf("failed to increment patch version: %s", err)
-
-			os.Exit(ErrDefault)
+			return Result{}, fmt.Errorf("failed to increment patch version: %s", err)
 		}
 	}
 
@@ -120,49 +105,48 @@ func Run() {
 		isPrerelease bool
 	)
 
-	if method == "build" {
-		isPrerelease = true
+	switch method {
+	case "build":
+		{
+			isPrerelease = true
 
-		buildNumber, _ := semver.NewPRVersion("0")
+			buildNumber, _ := semver.NewPRVersion("0")
 
-		if len(tag.Pre) > 1 && version == "" {
-			buildNumber = tag.Pre[1]
+			if len(tag.Pre) > 1 && version == "" {
+				buildNumber = tag.Pre[1]
+			}
+
+			tag.Pre = nil
+
+			preVersion, err := semver.NewPRVersion(p.PrereleaseID)
+			if err != nil {
+				return Result{}, fmt.Errorf("failed to create new pre-release version: %s", err)
+			}
+
+			tag.Pre = append(tag.Pre, preVersion)
+
+			buildVersion, err := semver.NewPRVersion(strconv.Itoa(int(buildNumber.VersionNum + 1)))
+			if err != nil {
+				return Result{}, fmt.Errorf("failed to create new build version: %s", err)
+			}
+
+			tag.Pre = append(tag.Pre, buildVersion)
+
+			finalTag = p.Prefix + tag.String()
 		}
-
-		tag.Pre = nil
-
-		preVersion, err := semver.NewPRVersion(p.PrereleaseID)
-		if err != nil {
-			log.Errorf("failed to create new pre-release version: %s", err)
-
-			os.Exit(ErrDefault)
-		}
-
-		tag.Pre = append(tag.Pre, preVersion)
-
-		buildVersion, err := semver.NewPRVersion(strconv.Itoa(int(buildNumber.VersionNum + 1)))
-		if err != nil {
-			log.Errorf("failed to create new build version: %s", err)
-
-			os.Exit(ErrDefault)
-		}
-
-		tag.Pre = append(tag.Pre, buildVersion)
+	case "major", "minor", "patch":
+		isPrerelease = len(tag.Pre) > 0
 
 		finalTag = p.Prefix + tag.String()
-	}
-
-	if method == "hotfix" || method == "final" {
+	default:
 		finalTag = p.Prefix + tag.FinalizeVersion()
 	}
 
-	log.Infof("SEMVER_TAG: %s", finalTag)
-	fmt.Printf("::set-output name=SEMVER_TAG::%s\n", finalTag)
-
-	log.Infof("IS_PRERELEASE: %v", isPrerelease)
-	fmt.Printf("::set-output name=IS_PRERELEASE::%v\n", isPrerelease)
-
-	os.Exit(Success)
+	return Result{
+		PreviousTag:  previousTag,
+		SemverTag:    finalTag,
+		IsPrerelease: isPrerelease,
+	}, nil
 }
 
 // determineBumpStrategy determines the strategy for semver to bump product version.
@@ -199,13 +183,13 @@ func determineBumpStrategy(bump, sourceBranch, destBranch, mainBranchName, devel
 	return "build", ""
 }
 
-func getBranchesFromCommit(hash string) (string, string, error) {
-	dest, err := git.Clean(git.Run("rev-parse", "--abbrev-ref", "HEAD", "--quiet"))
+func getBranchesFromCommit(hash string, repoDir string) (string, string, error) {
+	dest, err := git.Clean(git.Run("-C", repoDir, "rev-parse", "--abbrev-ref", "HEAD", "--quiet"))
 	if err != nil {
 		return "", "", fmt.Errorf("could not get current branch: %s", err)
 	}
 
-	message, err := git.Clean(git.Run("log", "-1", "--pretty=%B", hash))
+	message, err := git.Clean(git.Run("-C", repoDir, "log", "-1", "--pretty=%B", hash))
 	if err != nil {
 		return "", "", fmt.Errorf("could not get message from commit: %s", err)
 	}
@@ -241,7 +225,7 @@ func getSourceBranchFromCommit(message string) (string, error) {
 	return splitted[1], nil
 }
 
-func getLatestTagOrDefault(prefix string) (*semver.Version, error) {
+func getLatestTagOrDefault(prefix string, repoDir string) (*semver.Version, error) {
 	var (
 		prefixRe = regexp.MustCompile(fmt.Sprintf("^%s", prefix))
 		tag      *semver.Version
@@ -250,10 +234,10 @@ func getLatestTagOrDefault(prefix string) (*semver.Version, error) {
 
 	for _, fn := range []func() (string, error){
 		func() (string, error) {
-			return git.Clean(git.Run("tag", "--points-at", "HEAD", "--sort", "-version:creatordate"))
+			return git.Clean(git.Run("-C", repoDir, "tag", "--points-at", "HEAD", "--sort", "-version:creatordate"))
 		},
 		func() (string, error) {
-			return git.Clean(git.Run("describe", "--tags", "--abbrev=0"))
+			return git.Clean(git.Run("-C", repoDir, "describe", "--tags", "--abbrev=0"))
 		},
 		func() (string, error) {
 			return "0.0.0", nil

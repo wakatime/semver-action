@@ -61,6 +61,16 @@ func TestLoadParams_CommitSha(t *testing.T) {
 	assert.Equal(t, "2f08f7b455ec64741d135216d19d7e0c4dd46458", params.CommitSha)
 }
 
+func TestLoadParams_RepoDir(t *testing.T) {
+	os.Setenv("INPUT_REPO_DIR", "/var/tmp/wakatime-cli")
+	defer os.Unsetenv("INPUT_REPO_DIR")
+
+	params, err := generate.LoadParams()
+	require.NoError(t, err)
+
+	assert.Equal(t, "/var/tmp/wakatime-cli", params.RepoDir)
+}
+
 func TestLoadParams_InvalidCommitSha(t *testing.T) {
 	os.Setenv("GITHUB_SHA", "any")
 	defer os.Unsetenv("GITHUB_SHA")

@@ -118,6 +118,10 @@ Uses `auto` bump strategy to calculate the next semantic version.
 
 **Optional** The development branch name. Defaults to `develop`.
 
+### repo_dir
+
+**Optional** The repository path. Defaults to `current directory`.
+
 ### debug
 
 **Optional** Enables debug mode. Defaults to false.

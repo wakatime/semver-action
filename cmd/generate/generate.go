@@ -47,7 +47,9 @@ func Run() (Result, error) {
 
 	log.Debug(p.String())
 
-	if !git.IsRepo() {
+	g := git.NewGit()
+
+	if !g.IsRepo() {
 		return Result{}, fmt.Errorf("current folder is not a git repository")
 	}
 
@@ -57,18 +59,25 @@ func Run() (Result, error) {
 		tagSource = "parameter"
 	}
 
-	source, dest, err := getBranchesFromCommit(p.CommitSha, p.RepoDir)
+	dest, err := getDestBranchFromCommit(g, p.RepoDir)
 	if err != nil {
-		return Result{}, fmt.Errorf("failed extracting source and dest branches from commit: %s", err)
+		return Result{}, fmt.Errorf("failed to extract dest branche from commit: %s", err)
 	}
 
-	log.Debugf("source branch: %q, dest branch: %q\n", source, dest)
+	log.Debugf("dest branch: %q\n", dest)
+
+	source, err := getSourceBranchFromCommit(g, p.CommitSha, p.RepoDir)
+	if err != nil {
+		return Result{}, fmt.Errorf("failed to extract source branch from commit: %s", err)
+	}
+
+	log.Debugf("source branch: %q\n", source)
 
 	method, version := determineBumpStrategy(p.Bump, source, dest, p.MainBranchName, p.DevelopBranchName)
 
 	log.Debugf("method: %q, version: %q", method, version)
 
-	tag, err := getLatestTagOrDefault(p.Prefix, p.RepoDir)
+	tag, err := getLatestTagOrDefault(g, p.Prefix, p.RepoDir)
 	if err != nil {
 		return Result{}, fmt.Errorf("failed getting latest tag: %s", err)
 	}
@@ -183,26 +192,21 @@ func determineBumpStrategy(bump, sourceBranch, destBranch, mainBranchName, devel
 	return "build", ""
 }
 
-func getBranchesFromCommit(hash string, repoDir string) (string, string, error) {
-	dest, err := git.Clean(git.Run("-C", repoDir, "rev-parse", "--abbrev-ref", "HEAD", "--quiet"))
+func getDestBranchFromCommit(g git.Vcs, repoDir string) (string, error) {
+	dest, err := g.Clean(g.Run("-C", repoDir, "rev-parse", "--abbrev-ref", "HEAD", "--quiet"))
 	if err != nil {
-		return "", "", fmt.Errorf("could not get current branch: %s", err)
+		return "", fmt.Errorf("could not get current branch: %s", err)
 	}
 
-	message, err := git.Clean(git.Run("-C", repoDir, "log", "-1", "--pretty=%B", hash))
-	if err != nil {
-		return "", "", fmt.Errorf("could not get message from commit: %s", err)
-	}
-
-	source, err := getSourceBranchFromCommit(message)
-	if err != nil {
-		return "", "", fmt.Errorf("could not parse source branch: %s", err)
-	}
-
-	return source, dest, nil
+	return dest, nil
 }
 
-func getSourceBranchFromCommit(message string) (string, error) {
+func getSourceBranchFromCommit(g git.Vcs, hash string, repoDir string) (string, error) {
+	message, err := g.Clean(g.Run("-C", repoDir, "log", "-1", "--pretty=%B", hash))
+	if err != nil {
+		return "", fmt.Errorf("could not get message from commit: %s", err)
+	}
+
 	match := mergePRRegex.FindStringSubmatch(message)
 
 	paramsMap := make(map[string]string)
@@ -225,19 +229,18 @@ func getSourceBranchFromCommit(message string) (string, error) {
 	return splitted[1], nil
 }
 
-func getLatestTagOrDefault(prefix string, repoDir string) (*semver.Version, error) {
+func getLatestTagOrDefault(g git.Vcs, prefix, repoDir string) (*semver.Version, error) {
 	var (
 		prefixRe = regexp.MustCompile(fmt.Sprintf("^%s", prefix))
 		tag      *semver.Version
-		err      error
 	)
 
 	for _, fn := range []func() (string, error){
 		func() (string, error) {
-			return git.Clean(git.Run("-C", repoDir, "tag", "--points-at", "HEAD", "--sort", "-version:creatordate"))
+			return g.Clean(g.Run("-C", repoDir, "tag", "--points-at", "HEAD", "--sort", "-version:creatordate"))
 		},
 		func() (string, error) {
-			return git.Clean(git.Run("-C", repoDir, "describe", "--tags", "--abbrev=0"))
+			return g.Clean(g.Run("-C", repoDir, "describe", "--tags", "--abbrev=0"))
 		},
 		func() (string, error) {
 			return "0.0.0", nil
@@ -248,11 +251,11 @@ func getLatestTagOrDefault(prefix string, repoDir string) (*semver.Version, erro
 			tagStr = prefixRe.ReplaceAllLiteralString(tagStr, "")
 			parsed, err := semver.Parse(tagStr)
 			if err != nil {
-				log.Errorf("failed to parse tag %q or not valid semantic version: %s", tagStr, err)
+				return nil, fmt.Errorf("failed to parse tag %q or not valid semantic version: %s", tagStr, err)
 			}
 			return &parsed, nil
 		}
 	}
 
-	return tag, err
+	return tag, nil
 }

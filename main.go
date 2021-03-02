@@ -15,7 +15,7 @@ func main() {
 
 	result, err := generate.Run()
 	if err != nil {
-		log.Errorf("failed to load parameters: %s\n", err)
+		log.Errorf("failed to generate semver version: %s\n", err)
 
 		os.Exit(1)
 	}

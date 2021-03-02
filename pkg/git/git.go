@@ -9,14 +9,43 @@ import (
 	"github.com/apex/log"
 )
 
+// Vcs defines the methods to run git.
+type Vcs interface {
+	Run(args ...string) (string, error)
+	Clean(output string, err error) (string, error)
+	IsRepo() bool
+}
+
+// Git is an empty struct to run git.
+type Git struct{}
+
+// NewGit creates a new git instance.
+func NewGit() *Git {
+	return &Git{}
+}
+
 // IsRepo returns true if current folder is a git repository.
-func IsRepo() bool {
-	out, err := Run("rev-parse", "--is-inside-work-tree")
+func (g *Git) IsRepo() bool {
+	out, err := g.Run("rev-parse", "--is-inside-work-tree")
 	return err == nil && strings.TrimSpace(out) == "true"
 }
 
-// RunEnv runs a git command with the specified env vars and returns its output or errors.
-func RunEnv(env map[string]string, args ...string) (string, error) {
+// Clean the output.
+func (g *Git) Clean(output string, err error) (string, error) {
+	output = strings.ReplaceAll(strings.Split(output, "\n")[0], "'", "")
+	if err != nil {
+		err = errors.New(strings.TrimSuffix(err.Error(), "\n"))
+	}
+	return output, err
+}
+
+// Run runs a git command and returns its output or errors.
+func (g *Git) Run(args ...string) (string, error) {
+	return runEnv(nil, args...)
+}
+
+// runEnv runs a git command with the specified env vars and returns its output or errors.
+func runEnv(env map[string]string, args ...string) (string, error) {
 	var extraArgs = []string{
 		"-c", "log.showSignature=false",
 	}
@@ -49,18 +78,4 @@ func RunEnv(env map[string]string, args ...string) (string, error) {
 	}
 
 	return stdout.String(), nil
-}
-
-// Run runs a git command and returns its output or errors.
-func Run(args ...string) (string, error) {
-	return RunEnv(nil, args...)
-}
-
-// Clean the output.
-func Clean(output string, err error) (string, error) {
-	output = strings.ReplaceAll(strings.Split(output, "\n")[0], "'", "")
-	if err != nil {
-		err = errors.New(strings.TrimSuffix(err.Error(), "\n"))
-	}
-	return output, err
 }

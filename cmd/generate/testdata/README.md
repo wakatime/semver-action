@@ -1,4 +1,4 @@
-# Test Cases
+# Integration Test Cases
 
 1. New repository created with no previous tag and a `major branch` merged into `develop`. The semantic calculated version is `v1.0.0-pre.1` and the previous one is `v0.0.0`.
 

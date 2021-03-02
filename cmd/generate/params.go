@@ -139,12 +139,16 @@ func (p Params) String() string {
 
 	return fmt.Sprintf(
 		"commit sha: %q, bump: %q, base version: %q, prefix: %q,"+
-			" prerelease id: %q, debug: %t\n",
+			" prerelease id: %q, main branch name: %s, develop branch name: %s,"+
+			" repo dir: %s, debug: %t\n",
 		p.CommitSha,
 		p.Bump,
 		baseVersion,
 		p.Prefix,
 		p.PrereleaseID,
+		p.MainBranchName,
+		p.DevelopBranchName,
+		p.RepoDir,
 		p.Debug,
 	)
 }

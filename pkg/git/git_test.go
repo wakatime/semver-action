@@ -7,7 +7,6 @@ import (
 	"github.com/wakatime/semver-action/pkg/git"
 
 	"github.com/alecthomas/assert"
-	"github.com/blang/semver/v4"
 	"github.com/stretchr/testify/require"
 )
 
@@ -114,28 +113,9 @@ func TestLatestTag(t *testing.T) {
 		return "v2.4.79", nil
 	}
 
-	expected, err := semver.New("2.4.79")
-	require.NoError(t, err)
+	value := gc.LatestTag()
 
-	value, err := gc.LatestTag("v")
-	require.NoError(t, err)
-
-	assert.Equal(t, expected, value)
-}
-
-func TestLatestTag_IncorrectSemver(t *testing.T) {
-	gc := git.NewGit("/path/to/repo")
-	gc.GitCmd = func(env map[string]string, args ...string) (string, error) {
-		assert.Nil(t, env)
-		assert.Equal(t, args, []string{"-C", "/path/to/repo", "tag", "--points-at", "HEAD", "--sort", "-version:creatordate"})
-
-		return "v2", nil
-	}
-
-	_, err := gc.LatestTag("v")
-	require.Error(t, err)
-
-	assert.EqualError(t, err, `failed to parse tag "2" or not valid semantic version: No Major.Minor.Patch elements found`)
+	assert.Equal(t, "v2.4.79", value)
 }
 
 func TestLatestTag_NoTagFound(t *testing.T) {
@@ -157,8 +137,7 @@ func TestLatestTag_NoTagFound(t *testing.T) {
 		return "", nil
 	}
 
-	value, err := gc.LatestTag("v")
-	require.NoError(t, err)
+	value := gc.LatestTag()
 
-	assert.Nil(t, value)
+	assert.Empty(t, value)
 }

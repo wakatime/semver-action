@@ -2,7 +2,8 @@ FROM golang:1.16-alpine
 
 RUN apk add --update --no-cache \
     make \
-    git
+    git \
+    curl
 
 WORKDIR /go/src/github.com/wakatime/semver-action
 

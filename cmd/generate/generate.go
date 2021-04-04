@@ -13,13 +13,13 @@ import (
 
 var (
 	// nolint
-	branchHotfixPrefixRegex = regexp.MustCompile(`(?i)^hotfix(es)?/.*`)
+	branchHotfixPrefixRegex = regexp.MustCompile(`(?i)^hotfix(es)?/.+`)
 	// nolint
-	branchFeaturePrefixRegex = regexp.MustCompile(`(?i)^feature(s)?/.*`)
+	branchFeaturePrefixRegex = regexp.MustCompile(`(?i)^feature(s)?/.+`)
 	// nolint
-	branchBugfixPrefixRegex = regexp.MustCompile(`(?i)^bugfix(es)?/.*`)
+	branchBugfixPrefixRegex = regexp.MustCompile(`(?i)^bugfix(es)?/.+`)
 	// nolint
-	branchMajorPrefixRegex = regexp.MustCompile(`(?i)^major/.*`)
+	branchMajorPrefixRegex = regexp.MustCompile(`(?i)^major/.+`)
 )
 
 const tagDefault = "0.0.0"

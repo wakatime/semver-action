@@ -1,0 +1,60 @@
+name: 'semver-action'
+description: 'Generate a semantic version'
+
+branding:
+  color: purple
+  icon: tag
+
+inputs:
+  bump:
+    description: 'Bump strategy for semantic versioning. Can be `auto`, `major`, `minor`, `patch`'
+    default: 'auto'
+    required: false
+  base_version:
+    description: 'Version to use as base for the generation, skips version bumps.'
+    required: false
+  prefix:
+    description: 'Prefix used to prepend the final version'
+    default: 'v'
+    required: false
+  prerelease_id:
+    description: 'Text representing the pre-release identifier'
+    default: 'pre'
+    required: false
+  main_branch_name:
+    description: 'The main branch name'
+    default: 'master'
+    required: false
+  develop_branch_name:
+    description: 'The develop branch name'
+    default: 'develop'
+    required: false
+  repo_dir:
+    description: 'The repository path'
+    default: 'current dir'
+    required: false
+  debug:
+    description: 'Enables debug mode'
+    default: 'false'
+    required: false
+    
+outputs:
+  semver_tag:
+    description: 'The calculdated semantic version'
+  is_prerelease:
+    description: 'True if calculated tag is pre-release'
+  previous_tag:
+    description: 'The tag used to calculate next semantic version'
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - ${{ inputs.bump }}
+    - ${{ inputs.base_version }}
+    - ${{ inputs.prefix }}
+    - ${{ inputs.prerelease_id }}
+    - ${{ inputs.main_branch_name }}
+    - ${{ inputs.develop_branch_name }}
+    - ${{ inputs.repo_dir }}
+    - ${{ inputs.debug }}

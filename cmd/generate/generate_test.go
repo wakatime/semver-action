@@ -13,13 +13,13 @@ func TestTag(t *testing.T) {
 	tests := map[string]struct {
 		CurrentBranch string
 		LatestTag     string
+		AncestorTag   string
 		SourceBranch  string
 		Params        generate.Params
 		Result        generate.Result
 	}{
 		"no previous tag": {
 			CurrentBranch: "develop",
-			LatestTag:     "",
 			SourceBranch:  "major/semver-initial",
 			Params: generate.Params{
 				CommitSha:         "81918ffc",
@@ -31,6 +31,7 @@ func TestTag(t *testing.T) {
 			},
 			Result: generate.Result{
 				PreviousTag:  "v0.0.0",
+				AncestorTag:  "",
 				SemverTag:    "v1.0.0-alpha.1",
 				IsPrerelease: true,
 			},
@@ -67,6 +68,26 @@ func TestTag(t *testing.T) {
 			},
 			Result: generate.Result{
 				PreviousTag:  "v1.4.17-alpha.1",
+				SemverTag:    "v1.4.17",
+				IsPrerelease: false,
+			},
+		},
+		"merge develop into master with preivous matching tag": {
+			CurrentBranch: "master",
+			LatestTag:     "1.4.17-alpha.1",
+			AncestorTag:   "1.4.16",
+			SourceBranch:  "develop",
+			Params: generate.Params{
+				CommitSha:         "81918ffc",
+				Bump:              "auto",
+				Prefix:            "v",
+				PrereleaseID:      "alpha",
+				MainBranchName:    "master",
+				DevelopBranchName: "develop",
+			},
+			Result: generate.Result{
+				PreviousTag:  "v1.4.17-alpha.1",
+				AncestorTag:  "v1.4.16",
 				SemverTag:    "v1.4.17",
 				IsPrerelease: false,
 			},
@@ -169,6 +190,7 @@ func TestTag(t *testing.T) {
 			gc := initGitClientMock(
 				t,
 				test.LatestTag,
+				test.AncestorTag,
 				test.CurrentBranch,
 				test.SourceBranch,
 				test.Params.CommitSha,
@@ -202,11 +224,13 @@ type gitClientMock struct {
 	IsRepoFnInvoked        int
 	LatestTagFn            func(prefix string) (*semver.Version, error)
 	LatestTagFnInvoked     int
+	AncestorTagFn          func(prefix, pattern string) (*semver.Version, error)
+	AncestorTagFnInvoked   int
 	SourceBranchFn         func(commitHash string) (string, error)
 	SourceBranchFnInvoked  int
 }
 
-func initGitClientMock(t *testing.T, latestTag, currentBranch, sourceBranch, expectedCommitHash string) *gitClientMock {
+func initGitClientMock(t *testing.T, latestTag, ancestorTag, currentBranch, sourceBranch, expectedCommitHash string) *gitClientMock {
 	return &gitClientMock{
 		CurrentBranchFn: func() (string, error) {
 			return currentBranch, nil
@@ -220,6 +244,16 @@ func initGitClientMock(t *testing.T, latestTag, currentBranch, sourceBranch, exp
 			}
 
 			version, err := semver.New(latestTag)
+			require.NoError(t, err)
+
+			return version, nil
+		},
+		AncestorTagFn: func(prefix, pattern string) (*semver.Version, error) {
+			if ancestorTag == "" {
+				return nil, nil
+			}
+
+			version, err := semver.New(ancestorTag)
 			require.NoError(t, err)
 
 			return version, nil
@@ -243,6 +277,11 @@ func (m *gitClientMock) IsRepo() bool {
 func (m *gitClientMock) LatestTag(prefix string) (*semver.Version, error) {
 	m.LatestTagFnInvoked += 1
 	return m.LatestTagFn(prefix)
+}
+
+func (m *gitClientMock) AncestorTag(prefix, pattern string) (*semver.Version, error) {
+	m.AncestorTagFnInvoked += 1
+	return m.AncestorTagFn(prefix, pattern)
 }
 
 func (m *gitClientMock) SourceBranch(commitHash string) (string, error) {

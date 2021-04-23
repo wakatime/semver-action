@@ -45,6 +45,8 @@ outputs:
     description: 'True if calculated tag is pre-release'
   previous_tag:
     description: 'The tag used to calculate next semantic version'
+  ancestor_tag:
+    description: 'The ancestor tag based on specific pattern'
 
 runs:
   using: 'docker'

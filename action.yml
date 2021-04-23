@@ -31,7 +31,7 @@ inputs:
     required: false
   repo_dir:
     description: 'The repository path'
-    default: 'current dir'
+    default: '.'
     required: false
   debug:
     description: 'Enables debug mode'

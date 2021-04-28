@@ -151,3 +151,22 @@ func (c *Client) LatestTag(prefix string) (*semver.Version, error) {
 
 	return nil, nil
 }
+
+// AncestorTag returns the previous tag that matches specific pattern if found.
+func (c *Client) AncestorTag(prefix, pattern string) (*semver.Version, error) {
+	var (
+		prefixRe = regexp.MustCompile(fmt.Sprintf("^%s", prefix))
+	)
+
+	tagStr, _ := c.Clean(c.Run("-C", c.repoDir, "describe", "--tags", "--abbrev=0", "--match", pattern))
+	if tagStr != "" {
+		tagStr = prefixRe.ReplaceAllLiteralString(tagStr, "")
+		parsed, err := semver.Parse(tagStr)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse tag %q or not valid semantic version: %s", tagStr, err)
+		}
+		return &parsed, nil
+	}
+
+	return nil, nil
+}

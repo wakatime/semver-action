@@ -28,12 +28,14 @@ type gitClient interface {
 	CurrentBranch() (string, error)
 	IsRepo() bool
 	LatestTag(prefix string) (*semver.Version, error)
+	AncestorTag(prefix, pattern string) (*semver.Version, error)
 	SourceBranch(commitHash string) (string, error)
 }
 
 // Result contains the result of Run().
 type Result struct {
 	PreviousTag  string
+	AncestorTag  string
 	SemverTag    string
 	IsPrerelease bool
 }
@@ -123,14 +125,17 @@ func Tag(params Params, gc gitClient) (Result, error) {
 	}
 
 	var (
-		finalTag     string
-		isPrerelease bool
+		finalTag        string
+		ancestorTag     string
+		previousPattern string
+		isPrerelease    bool
 	)
 
 	switch method {
 	case "build":
 		{
 			isPrerelease = true
+			previousPattern = fmt.Sprintf("%s[0-9]*-%s*", params.Prefix, params.PrereleaseID)
 
 			buildNumber, _ := semver.NewPRVersion("0")
 
@@ -157,15 +162,31 @@ func Tag(params Params, gc gitClient) (Result, error) {
 			finalTag = params.Prefix + tag.String()
 		}
 	case "major", "minor", "patch":
-		isPrerelease = len(tag.Pre) > 0
+		if len(tag.Pre) > 0 {
+			isPrerelease = true
+			previousPattern = fmt.Sprintf("%s[0-9]*-%s*", params.Prefix, params.PrereleaseID)
+		} else {
+			previousPattern = fmt.Sprintf("%s[0-9]*", params.Prefix)
+		}
 
 		finalTag = params.Prefix + tag.String()
 	default:
+		previousPattern = fmt.Sprintf("%s[0-9]*", params.Prefix)
 		finalTag = params.Prefix + tag.FinalizeVersion()
+	}
+
+	previous, err := gc.AncestorTag(params.Prefix, previousPattern)
+	if err != nil {
+		log.Warnf("failed to get previous matching tag: %s", err)
+	}
+
+	if previous != nil {
+		ancestorTag = params.Prefix + previous.String()
 	}
 
 	return Result{
 		PreviousTag:  previousTag,
+		AncestorTag:  ancestorTag,
 		SemverTag:    finalTag,
 		IsPrerelease: isPrerelease,
 	}, nil

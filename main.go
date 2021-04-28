@@ -24,6 +24,10 @@ func main() {
 	log.Infof("PREVIOUS_TAG: %s", result.PreviousTag)
 	fmt.Printf("::set-output name=PREVIOUS_TAG::%s\n", result.PreviousTag)
 
+	// Print ancestor tag.
+	log.Infof("ANCESTOR_TAG: %s", result.AncestorTag)
+	fmt.Printf("::set-output name=ANCESTOR_TAG::%s\n", result.AncestorTag)
+
 	// Print calculated semver tag.
 	log.Infof("SEMVER_TAG: %s", result.SemverTag)
 	fmt.Printf("::set-output name=SEMVER_TAG::%s\n", result.SemverTag)

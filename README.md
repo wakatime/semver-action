@@ -107,8 +107,9 @@ Uses `auto` bump strategy to calculate the next semantic version.
 
 ## Outpus
 
-| parameter           | description                                      |
-| ---                 | ---                                              |
-| semver_tag          | The calculdated semantic version.                |
-| is_prerelease       | True if calculated tag is pre-release.           |
-| previous_tag        | The tag used to calculate next semantic version. |
+| parameter     | description                                      |
+| ---           | ---                                              |
+| semver_tag    | The calculdated semantic version.                |
+| is_prerelease | True if calculated tag is pre-release.           |
+| previous_tag  | The tag used to calculate next semantic version. |
+| ancestor_tag  | The ancestor tag based on specific pattern.      |

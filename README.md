@@ -14,6 +14,7 @@ These are the prefixes we expect when `auto` bump:
 - `^doc/.*` - `build`
 - `^feature(s)?/.*` - `minor`
 - `^major/.*` - `major`
+- `^misc/.*` - `build`
 
 ### Scenarios
 

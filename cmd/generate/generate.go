@@ -18,6 +18,7 @@ var (
 	branchFeaturePrefixRegex = regexp.MustCompile(`(?i)^feature(s)?/.+`)
 	branchHotfixPrefixRegex  = regexp.MustCompile(`(?i)^hotfix(es)?/.+`)
 	branchMajorPrefixRegex   = regexp.MustCompile(`(?i)^major/.+`)
+	branchMiscPrefixRegex    = regexp.MustCompile(`(?i)^misc/.+`)
 )
 
 const tagDefault = "0.0.0"
@@ -214,6 +215,11 @@ func determineBumpStrategy(bump, sourceBranch, destBranch, mainBranchName, devel
 	// major into develop
 	if branchMajorPrefixRegex.MatchString(sourceBranch) && destBranch == developBranchName {
 		return "build", "major"
+	}
+
+	// misc into develop branch
+	if branchMiscPrefixRegex.MatchString(sourceBranch) && destBranch == developBranchName {
+		return "build", ""
 	}
 
 	// hotfix into main branch

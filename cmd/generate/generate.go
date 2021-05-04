@@ -11,15 +11,13 @@ import (
 	"github.com/blang/semver/v4"
 )
 
+// nolint: gochecknoglobals
 var (
-	// nolint
-	branchHotfixPrefixRegex = regexp.MustCompile(`(?i)^hotfix(es)?/.+`)
-	// nolint
+	branchBugfixPrefixRegex  = regexp.MustCompile(`(?i)^bugfix(es)?/.+`)
+	branchDocPrefixRegex     = regexp.MustCompile(`(?i)^doc/.+`)
 	branchFeaturePrefixRegex = regexp.MustCompile(`(?i)^feature(s)?/.+`)
-	// nolint
-	branchBugfixPrefixRegex = regexp.MustCompile(`(?i)^bugfix(es)?/.+`)
-	// nolint
-	branchMajorPrefixRegex = regexp.MustCompile(`(?i)^major/.+`)
+	branchHotfixPrefixRegex  = regexp.MustCompile(`(?i)^hotfix(es)?/.+`)
+	branchMajorPrefixRegex   = regexp.MustCompile(`(?i)^major/.+`)
 )
 
 const tagDefault = "0.0.0"
@@ -201,6 +199,11 @@ func determineBumpStrategy(bump, sourceBranch, destBranch, mainBranchName, devel
 	// bugfix into develop branch
 	if branchBugfixPrefixRegex.MatchString(sourceBranch) && destBranch == developBranchName {
 		return "build", "patch"
+	}
+
+	// doc into develop branch
+	if branchDocPrefixRegex.MatchString(sourceBranch) && destBranch == developBranchName {
+		return "build", ""
 	}
 
 	// feature into develop

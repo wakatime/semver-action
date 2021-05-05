@@ -36,6 +36,24 @@ func TestTag(t *testing.T) {
 				IsPrerelease: true,
 			},
 		},
+		"doc branch into develop": {
+			CurrentBranch: "develop",
+			LatestTag:     "0.2.1-alpha.1",
+			SourceBranch:  "doc/semver-initial",
+			Params: generate.Params{
+				CommitSha:         "81918ffc",
+				Bump:              "auto",
+				Prefix:            "v",
+				PrereleaseID:      "alpha",
+				MainBranchName:    "master",
+				DevelopBranchName: "develop",
+			},
+			Result: generate.Result{
+				PreviousTag:  "v0.2.1-alpha.1",
+				SemverTag:    "v0.2.1-alpha.2",
+				IsPrerelease: true,
+			},
+		},
 		"feature branch into develop": {
 			CurrentBranch: "develop",
 			LatestTag:     "0.2.1",
@@ -51,6 +69,24 @@ func TestTag(t *testing.T) {
 			Result: generate.Result{
 				PreviousTag:  "v0.2.1",
 				SemverTag:    "v0.3.0-alpha.1",
+				IsPrerelease: true,
+			},
+		},
+		"misc branch into develop": {
+			CurrentBranch: "develop",
+			LatestTag:     "0.2.1-alpha.1",
+			SourceBranch:  "misc/semver-initial",
+			Params: generate.Params{
+				CommitSha:         "81918ffc",
+				Bump:              "auto",
+				Prefix:            "v",
+				PrereleaseID:      "alpha",
+				MainBranchName:    "master",
+				DevelopBranchName: "develop",
+			},
+			Result: generate.Result{
+				PreviousTag:  "v0.2.1-alpha.1",
+				SemverTag:    "v0.2.1-alpha.2",
 				IsPrerelease: true,
 			},
 		},

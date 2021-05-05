@@ -11,15 +11,14 @@ import (
 	"github.com/blang/semver/v4"
 )
 
+// nolint: gochecknoglobals
 var (
-	// nolint
-	branchHotfixPrefixRegex = regexp.MustCompile(`(?i)^hotfix(es)?/.+`)
-	// nolint
-	branchFeaturePrefixRegex = regexp.MustCompile(`(?i)^feature(s)?/.+`)
-	// nolint
-	branchBugfixPrefixRegex = regexp.MustCompile(`(?i)^bugfix(es)?/.+`)
-	// nolint
-	branchMajorPrefixRegex = regexp.MustCompile(`(?i)^major/.+`)
+	branchBugfixPrefixRegex  = regexp.MustCompile(`(?i)^bugfix/.+`)
+	branchDocPrefixRegex     = regexp.MustCompile(`(?i)^doc/.+`)
+	branchFeaturePrefixRegex = regexp.MustCompile(`(?i)^feature/.+`)
+	branchHotfixPrefixRegex  = regexp.MustCompile(`(?i)^hotfix/.+`)
+	branchMajorPrefixRegex   = regexp.MustCompile(`(?i)^major/.+`)
+	branchMiscPrefixRegex    = regexp.MustCompile(`(?i)^misc/.+`)
 )
 
 const tagDefault = "0.0.0"
@@ -203,6 +202,11 @@ func determineBumpStrategy(bump, sourceBranch, destBranch, mainBranchName, devel
 		return "build", "patch"
 	}
 
+	// doc into develop branch
+	if branchDocPrefixRegex.MatchString(sourceBranch) && destBranch == developBranchName {
+		return "build", ""
+	}
+
 	// feature into develop
 	if branchFeaturePrefixRegex.MatchString(sourceBranch) && destBranch == developBranchName {
 		return "build", "minor"
@@ -211,6 +215,11 @@ func determineBumpStrategy(bump, sourceBranch, destBranch, mainBranchName, devel
 	// major into develop
 	if branchMajorPrefixRegex.MatchString(sourceBranch) && destBranch == developBranchName {
 		return "build", "major"
+	}
+
+	// misc into develop branch
+	if branchMiscPrefixRegex.MatchString(sourceBranch) && destBranch == developBranchName {
+		return "build", ""
 	}
 
 	// hotfix into main branch

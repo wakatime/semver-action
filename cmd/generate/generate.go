@@ -13,10 +13,10 @@ import (
 
 // nolint: gochecknoglobals
 var (
-	branchBugfixPrefixRegex  = regexp.MustCompile(`(?i)^bugfix(es)?/.+`)
+	branchBugfixPrefixRegex  = regexp.MustCompile(`(?i)^bugfix/.+`)
 	branchDocPrefixRegex     = regexp.MustCompile(`(?i)^doc/.+`)
-	branchFeaturePrefixRegex = regexp.MustCompile(`(?i)^feature(s)?/.+`)
-	branchHotfixPrefixRegex  = regexp.MustCompile(`(?i)^hotfix(es)?/.+`)
+	branchFeaturePrefixRegex = regexp.MustCompile(`(?i)^feature/.+`)
+	branchHotfixPrefixRegex  = regexp.MustCompile(`(?i)^hotfix/.+`)
 	branchMajorPrefixRegex   = regexp.MustCompile(`(?i)^major/.+`)
 	branchMiscPrefixRegex    = regexp.MustCompile(`(?i)^misc/.+`)
 )

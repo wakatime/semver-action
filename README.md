@@ -10,9 +10,9 @@ If `auto` bump, it will try to extract the closest tag and calculate the next se
 
 These are the prefixes we expect when `auto` bump:
 
-- `^bugfix(es)?/.*` or `^hotfix(es)?/.*` - `patch`
+- `^bugfix/.*` or `^hotfix/.*` - `patch`
 - `^doc/.*` - `build`
-- `^feature(s)?/.*` - `minor`
+- `^feature/.*` - `minor`
 - `^major/.*` - `major`
 - `^misc/.*` - `build`
 

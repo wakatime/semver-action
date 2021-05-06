@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/apex/log"
-	"github.com/blang/semver/v4"
 )
 
 var mergePRRegex = regexp.MustCompile(`Merge pull request #([0-9])+ from (?P<source>.*)+`) // nolint
@@ -125,48 +124,19 @@ func (c *Client) SourceBranch(commitHash string) (string, error) {
 }
 
 // LatestTag returns the latest tag if found.
-func (c *Client) LatestTag(prefix string) (*semver.Version, error) {
-	var (
-		prefixRe = regexp.MustCompile(fmt.Sprintf("^%s", prefix))
-	)
-
-	for _, fn := range []func() (string, error){
-		func() (string, error) {
-			return c.Clean(c.Run("-C", c.repoDir, "tag", "--points-at", "HEAD", "--sort", "-version:creatordate"))
-		},
-		func() (string, error) {
-			return c.Clean(c.Run("-C", c.repoDir, "describe", "--tags", "--abbrev=0"))
-		},
-	} {
-		tagStr, _ := fn()
-		if tagStr != "" {
-			tagStr = prefixRe.ReplaceAllLiteralString(tagStr, "")
-			parsed, err := semver.Parse(tagStr)
-			if err != nil {
-				return nil, fmt.Errorf("failed to parse tag %q or not valid semantic version: %s", tagStr, err)
-			}
-			return &parsed, nil
-		}
+func (c *Client) LatestTag() (string, error) {
+	result, err := c.Clean(c.Run("-C", c.repoDir, "tag", "--points-at", "HEAD", "--sort", "-version:creatordate"))
+	if err != nil {
+		return c.Clean(c.Run("-C", c.repoDir, "describe", "--tags", "--abbrev=0"))
 	}
-
-	return nil, nil
+	return result, err
 }
 
 // AncestorTag returns the previous tag that matches specific pattern if found.
-func (c *Client) AncestorTag(prefix, pattern string) (*semver.Version, error) {
-	var (
-		prefixRe = regexp.MustCompile(fmt.Sprintf("^%s", prefix))
-	)
-
-	tagStr, _ := c.Clean(c.Run("-C", c.repoDir, "describe", "--tags", "--abbrev=0", "--match", pattern))
-	if tagStr != "" {
-		tagStr = prefixRe.ReplaceAllLiteralString(tagStr, "")
-		parsed, err := semver.Parse(tagStr)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse tag %q or not valid semantic version: %s", tagStr, err)
-		}
-		return &parsed, nil
+func (c *Client) AncestorTag(include, exclude string) (string, error) {
+	result, err := c.Clean(c.Run("-C", c.repoDir, "describe", "--tags", "--abbrev=0", "--match", include, "--exclude", exclude))
+	if err != nil {
+		return c.Clean(c.Run("-C", c.repoDir, "rev-list", "--max-parents=0", "HEAD"))
 	}
-
-	return nil, nil
+	return result, err
 }

@@ -7,7 +7,6 @@ import (
 	"github.com/wakatime/semver-action/pkg/git"
 
 	"github.com/alecthomas/assert"
-	"github.com/blang/semver/v4"
 	"github.com/stretchr/testify/require"
 )
 
@@ -114,28 +113,10 @@ func TestLatestTag(t *testing.T) {
 		return "v2.4.79", nil
 	}
 
-	expected, err := semver.New("2.4.79")
+	value, err := gc.LatestTag()
 	require.NoError(t, err)
 
-	value, err := gc.LatestTag("v")
-	require.NoError(t, err)
-
-	assert.Equal(t, expected, value)
-}
-
-func TestLatestTag_IncorrectSemver(t *testing.T) {
-	gc := git.NewGit("/path/to/repo")
-	gc.GitCmd = func(env map[string]string, args ...string) (string, error) {
-		assert.Nil(t, env)
-		assert.Equal(t, args, []string{"-C", "/path/to/repo", "tag", "--points-at", "HEAD", "--sort", "-version:creatordate"})
-
-		return "v2", nil
-	}
-
-	_, err := gc.LatestTag("v")
-	require.Error(t, err)
-
-	assert.EqualError(t, err, `failed to parse tag "2" or not valid semantic version: No Major.Minor.Patch elements found`)
+	assert.Equal(t, "v2.4.79", value)
 }
 
 func TestLatestTag_NoTagFound(t *testing.T) {
@@ -157,56 +138,68 @@ func TestLatestTag_NoTagFound(t *testing.T) {
 		return "", nil
 	}
 
-	value, err := gc.LatestTag("v")
+	value, err := gc.LatestTag()
 	require.NoError(t, err)
 
-	assert.Nil(t, value)
+	assert.Empty(t, value)
 }
 
 func TestAncestorTag(t *testing.T) {
-	gc := git.NewGit("/path/to/repo")
-	gc.GitCmd = func(env map[string]string, args ...string) (string, error) {
-		assert.Nil(t, env)
-		assert.Equal(t, args, []string{"-C", "/path/to/repo", "describe", "--tags", "--abbrev=0", "--match", args[6]})
-
-		return "0.1.3-dev.1", nil
+	tests := map[string]struct {
+		IncludePattern string
+		ExcludePattern string
+		ExpectedTag    string
+	}{
+		"dev tag only": {
+			IncludePattern: "v[0-9]*-dev*",
+			ExpectedTag:    "v0.11.1-dev.2",
+		},
+		"non-dev tag only": {
+			IncludePattern: "v[0-9]*",
+			ExcludePattern: "v[0-9]*-dev*",
+			ExpectedTag:    "v1.2.0",
+		},
 	}
 
-	expected, err := semver.New("0.1.3-dev.1")
-	require.NoError(t, err)
+	gc := git.NewGit("/path/to/repo")
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			gc.GitCmd = func(env map[string]string, args ...string) (string, error) {
+				assert.Nil(t, env)
+				assert.Equal(t, args, []string{"-C", "/path/to/repo", "describe", "--tags", "--abbrev=0", "--match", args[6], "--exclude", args[8]})
 
-	value, err := gc.AncestorTag("v", "v[0-9]*-dev*")
-	require.NoError(t, err)
+				return test.ExpectedTag, nil
+			}
 
-	assert.Equal(t, expected, value)
+			value, err := gc.AncestorTag(test.IncludePattern, test.ExcludePattern)
+			require.NoError(t, err)
+
+			assert.Equal(t, test.ExpectedTag, value)
+		})
+	}
 }
 
 func TestAncestorTag_NoTagFound(t *testing.T) {
+	var numCalls int
+
 	gc := git.NewGit("/path/to/repo")
 	gc.GitCmd = func(env map[string]string, args ...string) (string, error) {
+		numCalls++
+
 		assert.Nil(t, env)
-		assert.Equal(t, args, []string{"-C", "/path/to/repo", "describe", "--tags", "--abbrev=0", "--match", args[6]})
+
+		switch numCalls {
+		case 1:
+			assert.Equal(t, args, []string{"-C", "/path/to/repo", "describe", "--tags", "--abbrev=0", "--match", args[6], "--exclude", args[8]})
+		case 2:
+			assert.Equal(t, args, []string{"-C", "/path/to/repo", "rev-list", "--max-parents=0", "HEAD"})
+		}
 
 		return "", nil
 	}
 
-	value, err := gc.AncestorTag("v", "v[0-9]*")
+	value, err := gc.AncestorTag("", "")
 	require.NoError(t, err)
 
-	assert.Nil(t, value)
-}
-
-func TestAncestorTag_IncorrectSemver(t *testing.T) {
-	gc := git.NewGit("/path/to/repo")
-	gc.GitCmd = func(env map[string]string, args ...string) (string, error) {
-		assert.Nil(t, env)
-		assert.Equal(t, args, []string{"-C", "/path/to/repo", "describe", "--tags", "--abbrev=0", "--match", args[6]})
-
-		return "v2", nil
-	}
-
-	_, err := gc.AncestorTag("v", "v[0-9]*-dev*")
-	require.Error(t, err)
-
-	assert.EqualError(t, err, `failed to parse tag "2" or not valid semantic version: No Major.Minor.Patch elements found`)
+	assert.Empty(t, value)
 }

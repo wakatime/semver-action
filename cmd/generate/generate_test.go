@@ -36,6 +36,26 @@ func TestTag(t *testing.T) {
 				IsPrerelease: true,
 			},
 		},
+		"first non-development tag": {
+			CurrentBranch: "master",
+			LatestTag:     "1.0.0-alpha.1",
+			AncestorTag:   "e63c125b",
+			SourceBranch:  "develop",
+			Params: generate.Params{
+				CommitSha:         "81918ffc",
+				Bump:              "auto",
+				Prefix:            "v",
+				PrereleaseID:      "alpha",
+				MainBranchName:    "master",
+				DevelopBranchName: "develop",
+			},
+			Result: generate.Result{
+				PreviousTag:  "v1.0.0-alpha.1",
+				AncestorTag:  "e63c125b",
+				SemverTag:    "v1.0.0",
+				IsPrerelease: false,
+			},
+		},
 		"doc branch into develop": {
 			CurrentBranch: "develop",
 			LatestTag:     "0.2.1-alpha.1",
@@ -108,10 +128,10 @@ func TestTag(t *testing.T) {
 				IsPrerelease: false,
 			},
 		},
-		"merge develop into master with preivous matching tag": {
+		"merge develop into master with previous matching tag": {
 			CurrentBranch: "master",
 			LatestTag:     "1.4.17-alpha.1",
-			AncestorTag:   "1.4.16",
+			AncestorTag:   "v1.4.16",
 			SourceBranch:  "develop",
 			Params: generate.Params{
 				CommitSha:         "81918ffc",
@@ -258,9 +278,9 @@ type gitClientMock struct {
 	CurrentBranchFnInvoked int
 	IsRepoFn               func() bool
 	IsRepoFnInvoked        int
-	LatestTagFn            func(prefix string) (*semver.Version, error)
+	LatestTagFn            func() (string, error)
 	LatestTagFnInvoked     int
-	AncestorTagFn          func(prefix, pattern string) (*semver.Version, error)
+	AncestorTagFn          func(include, exclude string) (string, error)
 	AncestorTagFnInvoked   int
 	SourceBranchFn         func(commitHash string) (string, error)
 	SourceBranchFnInvoked  int
@@ -274,25 +294,11 @@ func initGitClientMock(t *testing.T, latestTag, ancestorTag, currentBranch, sour
 		IsRepoFn: func() bool {
 			return true
 		},
-		LatestTagFn: func(prefix string) (*semver.Version, error) {
-			if latestTag == "" {
-				return nil, nil
-			}
-
-			version, err := semver.New(latestTag)
-			require.NoError(t, err)
-
-			return version, nil
+		LatestTagFn: func() (string, error) {
+			return latestTag, nil
 		},
-		AncestorTagFn: func(prefix, pattern string) (*semver.Version, error) {
-			if ancestorTag == "" {
-				return nil, nil
-			}
-
-			version, err := semver.New(ancestorTag)
-			require.NoError(t, err)
-
-			return version, nil
+		AncestorTagFn: func(include, exclude string) (string, error) {
+			return ancestorTag, nil
 		},
 		SourceBranchFn: func(commitHash string) (string, error) {
 			assert.Equal(t, expectedCommitHash, commitHash)
@@ -310,14 +316,14 @@ func (m *gitClientMock) IsRepo() bool {
 	return m.IsRepoFn()
 }
 
-func (m *gitClientMock) LatestTag(prefix string) (*semver.Version, error) {
+func (m *gitClientMock) LatestTag() (string, error) {
 	m.LatestTagFnInvoked += 1
-	return m.LatestTagFn(prefix)
+	return m.LatestTagFn()
 }
 
-func (m *gitClientMock) AncestorTag(prefix, pattern string) (*semver.Version, error) {
+func (m *gitClientMock) AncestorTag(include, exclude string) (string, error) {
 	m.AncestorTagFnInvoked += 1
-	return m.AncestorTagFn(prefix, pattern)
+	return m.AncestorTagFn(include, exclude)
 }
 
 func (m *gitClientMock) SourceBranch(commitHash string) (string, error) {

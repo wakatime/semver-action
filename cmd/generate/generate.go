@@ -26,8 +26,8 @@ const tagDefault = "0.0.0"
 type gitClient interface {
 	CurrentBranch() (string, error)
 	IsRepo() bool
-	LatestTag(prefix string) (*semver.Version, error)
-	AncestorTag(prefix, pattern string) (*semver.Version, error)
+	LatestTag() (string, error)
+	AncestorTag(include, exclude string) (string, error)
 	SourceBranch(commitHash string) (string, error)
 }
 
@@ -88,12 +88,25 @@ func Tag(params Params, gc gitClient) (Result, error) {
 
 	log.Debugf("method: %q, version: %q", method, version)
 
-	tag, err := gc.LatestTag(params.Prefix)
+	latestTag, err := gc.LatestTag()
 	if err != nil {
 		return Result{}, fmt.Errorf("failed getting latest tag: %s", err)
 	}
-	if tag == nil {
+
+	var (
+		tag      *semver.Version
+		prefixRe = regexp.MustCompile(fmt.Sprintf("^%s", params.Prefix))
+	)
+
+	if latestTag == "" {
 		tag, _ = semver.New(tagDefault)
+	} else {
+		latestTag = prefixRe.ReplaceAllLiteralString(latestTag, "")
+		parsed, err := semver.Parse(latestTag)
+		if err != nil {
+			return Result{}, fmt.Errorf("failed to parse tag %q or not valid semantic version: %s", latestTag, err)
+		}
+		tag = &parsed
 	}
 
 	previousTag := params.Prefix + tag.String()
@@ -124,17 +137,18 @@ func Tag(params Params, gc gitClient) (Result, error) {
 	}
 
 	var (
-		finalTag        string
-		ancestorTag     string
-		previousPattern string
-		isPrerelease    bool
+		finalTag       string
+		ancestorTag    string
+		includePattern string
+		excludePattern string
+		isPrerelease   bool
 	)
 
 	switch method {
 	case "build":
 		{
 			isPrerelease = true
-			previousPattern = fmt.Sprintf("%s[0-9]*-%s*", params.Prefix, params.PrereleaseID)
+			includePattern = fmt.Sprintf("%s[0-9]*-%s*", params.Prefix, params.PrereleaseID)
 
 			buildNumber, _ := semver.NewPRVersion("0")
 
@@ -163,24 +177,22 @@ func Tag(params Params, gc gitClient) (Result, error) {
 	case "major", "minor", "patch":
 		if len(tag.Pre) > 0 {
 			isPrerelease = true
-			previousPattern = fmt.Sprintf("%s[0-9]*-%s*", params.Prefix, params.PrereleaseID)
+			includePattern = fmt.Sprintf("%s[0-9]*-%s*", params.Prefix, params.PrereleaseID)
 		} else {
-			previousPattern = fmt.Sprintf("%s[0-9]*", params.Prefix)
+			includePattern = fmt.Sprintf("%s[0-9]*", params.Prefix)
+			excludePattern = fmt.Sprintf("%s[0-9]*-%s*", params.Prefix, params.PrereleaseID)
 		}
 
 		finalTag = params.Prefix + tag.String()
 	default:
-		previousPattern = fmt.Sprintf("%s[0-9]*", params.Prefix)
+		includePattern = fmt.Sprintf("%s[0-9]*", params.Prefix)
+		excludePattern = fmt.Sprintf("%s[0-9]*-%s*", params.Prefix, params.PrereleaseID)
 		finalTag = params.Prefix + tag.FinalizeVersion()
 	}
 
-	previous, err := gc.AncestorTag(params.Prefix, previousPattern)
+	ancestorTag, err = gc.AncestorTag(includePattern, excludePattern)
 	if err != nil {
-		log.Warnf("failed to get previous matching tag: %s", err)
-	}
-
-	if previous != nil {
-		ancestorTag = params.Prefix + previous.String()
+		return Result{}, fmt.Errorf("failed getting ancestor tag: %s", err)
 	}
 
 	return Result{

@@ -113,8 +113,7 @@ func TestLatestTag(t *testing.T) {
 		return "v2.4.79", nil
 	}
 
-	value, err := gc.LatestTag()
-	require.NoError(t, err)
+	value := gc.LatestTag()
 
 	assert.Equal(t, "v2.4.79", value)
 }
@@ -138,8 +137,7 @@ func TestLatestTag_NoTagFound(t *testing.T) {
 		return "", nil
 	}
 
-	value, err := gc.LatestTag()
-	require.NoError(t, err)
+	value := gc.LatestTag()
 
 	assert.Empty(t, value)
 }
@@ -171,8 +169,7 @@ func TestAncestorTag(t *testing.T) {
 				return test.ExpectedTag, nil
 			}
 
-			value, err := gc.AncestorTag(test.IncludePattern, test.ExcludePattern)
-			require.NoError(t, err)
+			value := gc.AncestorTag(test.IncludePattern, test.ExcludePattern)
 
 			assert.Equal(t, test.ExpectedTag, value)
 		})
@@ -198,8 +195,7 @@ func TestAncestorTag_NoTagFound(t *testing.T) {
 		return "", nil
 	}
 
-	value, err := gc.AncestorTag("", "")
-	require.NoError(t, err)
+	value := gc.AncestorTag("", "")
 
 	assert.Empty(t, value)
 }

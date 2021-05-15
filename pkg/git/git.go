@@ -124,19 +124,19 @@ func (c *Client) SourceBranch(commitHash string) (string, error) {
 }
 
 // LatestTag returns the latest tag if found.
-func (c *Client) LatestTag() (string, error) {
-	result, err := c.Clean(c.Run("-C", c.repoDir, "tag", "--points-at", "HEAD", "--sort", "-version:creatordate"))
-	if err != nil {
-		return c.Clean(c.Run("-C", c.repoDir, "describe", "--tags", "--abbrev=0"))
+func (c *Client) LatestTag() string {
+	result, _ := c.Clean(c.Run("-C", c.repoDir, "tag", "--points-at", "HEAD", "--sort", "-version:creatordate"))
+	if result == "" {
+		result, _ = c.Clean(c.Run("-C", c.repoDir, "describe", "--tags", "--abbrev=0"))
 	}
-	return result, err
+	return result
 }
 
 // AncestorTag returns the previous tag that matches specific pattern if found.
-func (c *Client) AncestorTag(include, exclude string) (string, error) {
-	result, err := c.Clean(c.Run("-C", c.repoDir, "describe", "--tags", "--abbrev=0", "--match", include, "--exclude", exclude))
-	if err != nil {
-		return c.Clean(c.Run("-C", c.repoDir, "rev-list", "--max-parents=0", "HEAD"))
+func (c *Client) AncestorTag(include, exclude string) string {
+	result, _ := c.Clean(c.Run("-C", c.repoDir, "describe", "--tags", "--abbrev=0", "--match", include, "--exclude", exclude))
+	if result == "" {
+		result, _ = c.Clean(c.Run("-C", c.repoDir, "rev-list", "--max-parents=0", "HEAD"))
 	}
-	return result, err
+	return result
 }

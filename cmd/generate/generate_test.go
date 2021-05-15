@@ -278,9 +278,9 @@ type gitClientMock struct {
 	CurrentBranchFnInvoked int
 	IsRepoFn               func() bool
 	IsRepoFnInvoked        int
-	LatestTagFn            func() (string, error)
+	LatestTagFn            func() string
 	LatestTagFnInvoked     int
-	AncestorTagFn          func(include, exclude string) (string, error)
+	AncestorTagFn          func(include, exclude string) string
 	AncestorTagFnInvoked   int
 	SourceBranchFn         func(commitHash string) (string, error)
 	SourceBranchFnInvoked  int
@@ -294,11 +294,11 @@ func initGitClientMock(t *testing.T, latestTag, ancestorTag, currentBranch, sour
 		IsRepoFn: func() bool {
 			return true
 		},
-		LatestTagFn: func() (string, error) {
-			return latestTag, nil
+		LatestTagFn: func() string {
+			return latestTag
 		},
-		AncestorTagFn: func(include, exclude string) (string, error) {
-			return ancestorTag, nil
+		AncestorTagFn: func(include, exclude string) string {
+			return ancestorTag
 		},
 		SourceBranchFn: func(commitHash string) (string, error) {
 			assert.Equal(t, expectedCommitHash, commitHash)
@@ -316,12 +316,12 @@ func (m *gitClientMock) IsRepo() bool {
 	return m.IsRepoFn()
 }
 
-func (m *gitClientMock) LatestTag() (string, error) {
+func (m *gitClientMock) LatestTag() string {
 	m.LatestTagFnInvoked += 1
 	return m.LatestTagFn()
 }
 
-func (m *gitClientMock) AncestorTag(include, exclude string) (string, error) {
+func (m *gitClientMock) AncestorTag(include, exclude string) string {
 	m.AncestorTagFnInvoked += 1
 	return m.AncestorTagFn(include, exclude)
 }

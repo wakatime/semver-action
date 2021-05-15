@@ -55,6 +55,13 @@ func TestDetermineBumpStrategy(t *testing.T) {
 			Bump:           "auto",
 			ExpectedMethod: "hotfix",
 		},
+		"source branch resync, dest branch develop and auto bump": {
+			SourceBranch:    "resync/some",
+			DestBranch:      "develop",
+			Bump:            "auto",
+			ExpectedMethod:  "build",
+			ExpectedVersion: "patch",
+		},
 		"source branch develop, dest branch master and auto bump": {
 			SourceBranch:   "develop",
 			DestBranch:     "master",

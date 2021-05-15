@@ -19,6 +19,7 @@ var (
 	branchHotfixPrefixRegex  = regexp.MustCompile(`(?i)^hotfix/.+`)
 	branchMajorPrefixRegex   = regexp.MustCompile(`(?i)^major/.+`)
 	branchMiscPrefixRegex    = regexp.MustCompile(`(?i)^misc/.+`)
+	branchResyncPrefixRegex  = regexp.MustCompile(`(?i)^resync/.+`)
 )
 
 const tagDefault = "0.0.0"
@@ -27,7 +28,7 @@ type gitClient interface {
 	CurrentBranch() (string, error)
 	IsRepo() bool
 	LatestTag() string
-	AncestorTag(include, exclude string) string
+	AncestorTag(include, branch string) string
 	SourceBranch(commitHash string) (string, error)
 }
 
@@ -89,16 +90,14 @@ func Tag(params Params, gc gitClient) (Result, error) {
 	log.Debugf("method: %q, version: %q", method, version)
 
 	var (
-		tag      *semver.Version
-		prefixRe = regexp.MustCompile(fmt.Sprintf("^%s", params.Prefix))
+		tag *semver.Version
 	)
 
 	latestTag := gc.LatestTag()
 	if latestTag == "" {
 		tag, _ = semver.New(tagDefault)
 	} else {
-		latestTag = prefixRe.ReplaceAllLiteralString(latestTag, "")
-		parsed, err := semver.Parse(latestTag)
+		parsed, err := semver.ParseTolerant(latestTag)
 		if err != nil {
 			return Result{}, fmt.Errorf("failed to parse tag %q or not valid semantic version: %s", latestTag, err)
 		}
@@ -136,7 +135,6 @@ func Tag(params Params, gc gitClient) (Result, error) {
 		finalTag       string
 		ancestorTag    string
 		includePattern string
-		excludePattern string
 		isPrerelease   bool
 	)
 
@@ -176,17 +174,15 @@ func Tag(params Params, gc gitClient) (Result, error) {
 			includePattern = fmt.Sprintf("%s[0-9]*-%s*", params.Prefix, params.PrereleaseID)
 		} else {
 			includePattern = fmt.Sprintf("%s[0-9]*", params.Prefix)
-			excludePattern = fmt.Sprintf("%s[0-9]*-%s*", params.Prefix, params.PrereleaseID)
 		}
 
 		finalTag = params.Prefix + tag.String()
 	default:
 		includePattern = fmt.Sprintf("%s[0-9]*", params.Prefix)
-		excludePattern = fmt.Sprintf("%s[0-9]*-%s*", params.Prefix, params.PrereleaseID)
 		finalTag = params.Prefix + tag.FinalizeVersion()
 	}
 
-	ancestorTag = gc.AncestorTag(includePattern, excludePattern)
+	ancestorTag = gc.AncestorTag(includePattern, dest)
 
 	return Result{
 		PreviousTag:  previousTag,
@@ -230,6 +226,11 @@ func determineBumpStrategy(bump, sourceBranch, destBranch, mainBranchName, devel
 	// hotfix into main branch
 	if branchHotfixPrefixRegex.MatchString(sourceBranch) && destBranch == mainBranchName {
 		return "hotfix", ""
+	}
+
+	// resync into develop
+	if branchResyncPrefixRegex.MatchString(sourceBranch) && destBranch == developBranchName {
+		return "build", "patch"
 	}
 
 	// develop branch into main branch

@@ -93,6 +93,24 @@ func TestTag(t *testing.T) {
 				IsPrerelease: true,
 			},
 		},
+		"bugfix branch into develop": {
+			CurrentBranch: "develop",
+			LatestTag:     "v0.2.1",
+			SourceBranch:  "bugfix/some",
+			Params: generate.Params{
+				CommitSha:         "81918ffc",
+				Bump:              "auto",
+				Prefix:            "v",
+				PrereleaseID:      "alpha",
+				MainBranchName:    "master",
+				DevelopBranchName: "develop",
+			},
+			Result: generate.Result{
+				PreviousTag:  "v0.2.1",
+				SemverTag:    "v0.2.2-alpha.1",
+				IsPrerelease: true,
+			},
+		},
 		"misc branch into develop": {
 			CurrentBranch: "develop",
 			LatestTag:     "v0.2.1-alpha.1",

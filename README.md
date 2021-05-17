@@ -1,5 +1,7 @@
 # Semantic Versioning Action
 
+![Unit Tests master](https://img.shields.io/github/workflow/status/wakatime/semver-action/Unit%20Tests/master?label=%20tests) [![Coverage Status](https://coveralls.io/repos/github/wakatime/semver-action/badge.svg?branch=master)](https://coveralls.io/github/wakatime/semver-action?branch=master)
+
 This action calculates the next version relying on semantic versioning.
 
 ## Strategies

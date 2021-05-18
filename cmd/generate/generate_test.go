@@ -3,10 +3,11 @@ package generate_test
 import (
 	"testing"
 
+	"github.com/wakatime/semver-action/cmd/generate"
+
 	"github.com/alecthomas/assert"
 	"github.com/blang/semver/v4"
 	"github.com/stretchr/testify/require"
-	"github.com/wakatime/semver-action/cmd/generate"
 )
 
 func TestTag(t *testing.T) {
@@ -20,7 +21,7 @@ func TestTag(t *testing.T) {
 	}{
 		"no previous tag": {
 			CurrentBranch: "develop",
-			SourceBranch:  "major/semver-initial",
+			SourceBranch:  "major/some",
 			Params: generate.Params{
 				CommitSha:         "81918ffc",
 				Bump:              "auto",
@@ -38,7 +39,7 @@ func TestTag(t *testing.T) {
 		},
 		"first non-development tag": {
 			CurrentBranch: "master",
-			LatestTag:     "1.0.0-alpha.1",
+			LatestTag:     "v1.0.0-alpha.1",
 			AncestorTag:   "e63c125b",
 			SourceBranch:  "develop",
 			Params: generate.Params{
@@ -58,8 +59,8 @@ func TestTag(t *testing.T) {
 		},
 		"doc branch into develop": {
 			CurrentBranch: "develop",
-			LatestTag:     "0.2.1-alpha.1",
-			SourceBranch:  "doc/semver-initial",
+			LatestTag:     "v0.2.1-alpha.1",
+			SourceBranch:  "doc/some",
 			Params: generate.Params{
 				CommitSha:         "81918ffc",
 				Bump:              "auto",
@@ -76,8 +77,8 @@ func TestTag(t *testing.T) {
 		},
 		"feature branch into develop": {
 			CurrentBranch: "develop",
-			LatestTag:     "0.2.1",
-			SourceBranch:  "feature/semver-initial",
+			LatestTag:     "v0.2.1",
+			SourceBranch:  "feature/some",
 			Params: generate.Params{
 				CommitSha:         "81918ffc",
 				Bump:              "auto",
@@ -92,10 +93,28 @@ func TestTag(t *testing.T) {
 				IsPrerelease: true,
 			},
 		},
+		"bugfix branch into develop": {
+			CurrentBranch: "develop",
+			LatestTag:     "v0.2.1",
+			SourceBranch:  "bugfix/some",
+			Params: generate.Params{
+				CommitSha:         "81918ffc",
+				Bump:              "auto",
+				Prefix:            "v",
+				PrereleaseID:      "alpha",
+				MainBranchName:    "master",
+				DevelopBranchName: "develop",
+			},
+			Result: generate.Result{
+				PreviousTag:  "v0.2.1",
+				SemverTag:    "v0.2.2-alpha.1",
+				IsPrerelease: true,
+			},
+		},
 		"misc branch into develop": {
 			CurrentBranch: "develop",
-			LatestTag:     "0.2.1-alpha.1",
-			SourceBranch:  "misc/semver-initial",
+			LatestTag:     "v0.2.1-alpha.1",
+			SourceBranch:  "misc/some",
 			Params: generate.Params{
 				CommitSha:         "81918ffc",
 				Bump:              "auto",
@@ -110,9 +129,27 @@ func TestTag(t *testing.T) {
 				IsPrerelease: true,
 			},
 		},
+		"hotfix branch into master": {
+			CurrentBranch: "master",
+			LatestTag:     "v0.2.1",
+			SourceBranch:  "hotfix/some",
+			Params: generate.Params{
+				CommitSha:         "81918ffc",
+				Bump:              "auto",
+				Prefix:            "v",
+				PrereleaseID:      "alpha",
+				MainBranchName:    "master",
+				DevelopBranchName: "develop",
+			},
+			Result: generate.Result{
+				PreviousTag:  "v0.2.1",
+				SemverTag:    "v0.2.2",
+				IsPrerelease: false,
+			},
+		},
 		"merge develop into master": {
 			CurrentBranch: "master",
-			LatestTag:     "1.4.17-alpha.1",
+			LatestTag:     "v1.4.17-alpha.1",
 			SourceBranch:  "develop",
 			Params: generate.Params{
 				CommitSha:         "81918ffc",
@@ -130,7 +167,7 @@ func TestTag(t *testing.T) {
 		},
 		"merge develop into master with previous matching tag": {
 			CurrentBranch: "master",
-			LatestTag:     "1.4.17-alpha.1",
+			LatestTag:     "v1.4.17-alpha.1",
 			AncestorTag:   "v1.4.16",
 			SourceBranch:  "develop",
 			Params: generate.Params{
@@ -148,9 +185,29 @@ func TestTag(t *testing.T) {
 				IsPrerelease: false,
 			},
 		},
+		"resync branch into develop": {
+			CurrentBranch: "develop",
+			LatestTag:     "v1.3.0-alpha.1",
+			AncestorTag:   "v1.2.0-alpha.2",
+			SourceBranch:  "resync/master",
+			Params: generate.Params{
+				CommitSha:         "81918ffc",
+				Bump:              "auto",
+				Prefix:            "v",
+				PrereleaseID:      "alpha",
+				MainBranchName:    "master",
+				DevelopBranchName: "develop",
+			},
+			Result: generate.Result{
+				PreviousTag:  "v1.3.0-alpha.1",
+				AncestorTag:  "v1.2.0-alpha.2",
+				SemverTag:    "v1.3.1-alpha.1",
+				IsPrerelease: true,
+			},
+		},
 		"base version set": {
 			CurrentBranch: "develop",
-			LatestTag:     "2.6.19",
+			LatestTag:     "v2.6.19",
 			SourceBranch:  "feature/semver-initial",
 			Params: generate.Params{
 				CommitSha:         "81918ffc",
@@ -169,7 +226,7 @@ func TestTag(t *testing.T) {
 		},
 		"invalid branch name": {
 			CurrentBranch: "develop",
-			LatestTag:     "2.6.19-alpha.1",
+			LatestTag:     "v2.6.19-alpha.1",
 			SourceBranch:  "semver-initial",
 			Params: generate.Params{
 				CommitSha:         "81918ffc",
@@ -187,7 +244,7 @@ func TestTag(t *testing.T) {
 		},
 		"force bump major": {
 			CurrentBranch: "develop",
-			LatestTag:     "2.6.19-alpha.1",
+			LatestTag:     "v2.6.19-alpha.1",
 			SourceBranch:  "semver-initial",
 			Params: generate.Params{
 				CommitSha:         "81918ffc",
@@ -205,7 +262,7 @@ func TestTag(t *testing.T) {
 		},
 		"force bump minor": {
 			CurrentBranch: "develop",
-			LatestTag:     "2.6.19-alpha.1",
+			LatestTag:     "v2.6.19-alpha.1",
 			SourceBranch:  "semver-initial",
 			Params: generate.Params{
 				CommitSha:         "81918ffc",
@@ -223,7 +280,7 @@ func TestTag(t *testing.T) {
 		},
 		"force bump patch": {
 			CurrentBranch: "develop",
-			LatestTag:     "2.6.19-alpha.1",
+			LatestTag:     "v2.6.19-alpha.1",
 			SourceBranch:  "semver-initial",
 			Params: generate.Params{
 				CommitSha:         "81918ffc",
@@ -280,13 +337,19 @@ type gitClientMock struct {
 	IsRepoFnInvoked        int
 	LatestTagFn            func() string
 	LatestTagFnInvoked     int
-	AncestorTagFn          func(include, exclude string) string
+	AncestorTagFn          func(include, branch string) string
 	AncestorTagFnInvoked   int
 	SourceBranchFn         func(commitHash string) (string, error)
 	SourceBranchFnInvoked  int
 }
 
-func initGitClientMock(t *testing.T, latestTag, ancestorTag, currentBranch, sourceBranch, expectedCommitHash string) *gitClientMock {
+func initGitClientMock(
+	t *testing.T,
+	latestTag,
+	ancestorTag,
+	currentBranch,
+	sourceBranch,
+	expectedCommitHash string) *gitClientMock {
 	return &gitClientMock{
 		CurrentBranchFn: func() (string, error) {
 			return currentBranch, nil
@@ -297,7 +360,7 @@ func initGitClientMock(t *testing.T, latestTag, ancestorTag, currentBranch, sour
 		LatestTagFn: func() string {
 			return latestTag
 		},
-		AncestorTagFn: func(include, exclude string) string {
+		AncestorTagFn: func(include, branch string) string {
 			return ancestorTag
 		},
 		SourceBranchFn: func(commitHash string) (string, error) {
@@ -321,9 +384,9 @@ func (m *gitClientMock) LatestTag() string {
 	return m.LatestTagFn()
 }
 
-func (m *gitClientMock) AncestorTag(include, exclude string) string {
+func (m *gitClientMock) AncestorTag(include, branch string) string {
 	m.AncestorTagFnInvoked += 1
-	return m.AncestorTagFn(include, exclude)
+	return m.AncestorTagFn(include, branch)
 }
 
 func (m *gitClientMock) SourceBranch(commitHash string) (string, error) {

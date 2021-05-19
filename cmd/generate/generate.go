@@ -131,6 +131,22 @@ func Tag(params Params, gc gitClient) (Result, error) {
 		}
 	}
 
+	// If branch is prefixed with doc or misc and the latest tag is equal to the
+	// ancestor develop tag excluding pre-release part, then it will use ancestor one instead.
+	if (branchDocPrefixRegex.MatchString(source) || branchMiscPrefixRegex.MatchString(source)) &&
+		dest == params.DevelopBranchName {
+		ancestorDevelopTag := gc.AncestorTag(fmt.Sprintf("%s[0-9]*-%s*", params.Prefix, params.PrereleaseID), dest)
+
+		parsed, err := semver.ParseTolerant(ancestorDevelopTag)
+		if err != nil {
+			return Result{}, fmt.Errorf("failed to parse tag %q or not valid semantic version: %s", latestTag, err)
+		}
+
+		if tag.String() == parsed.FinalizeVersion() {
+			tag = &parsed
+		}
+	}
+
 	var (
 		finalTag       string
 		ancestorTag    string

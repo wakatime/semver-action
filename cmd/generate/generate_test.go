@@ -60,6 +60,7 @@ func TestTag(t *testing.T) {
 		"doc branch into develop": {
 			CurrentBranch: "develop",
 			LatestTag:     "v0.2.1-alpha.1",
+			AncestorTag:   "v0.2.0-alpha.1",
 			SourceBranch:  "doc/some",
 			Params: generate.Params{
 				CommitSha:         "81918ffc",
@@ -71,7 +72,28 @@ func TestTag(t *testing.T) {
 			},
 			Result: generate.Result{
 				PreviousTag:  "v0.2.1-alpha.1",
+				AncestorTag:  "v0.2.0-alpha.1",
 				SemverTag:    "v0.2.1-alpha.2",
+				IsPrerelease: true,
+			},
+		},
+		"doc branch into develop when latest tag is equal to ancestor develop tag excluding pre-release part": {
+			CurrentBranch: "develop",
+			LatestTag:     "v0.2.1",
+			AncestorTag:   "v0.2.1-alpha.2",
+			SourceBranch:  "doc/some",
+			Params: generate.Params{
+				CommitSha:         "81918ffc",
+				Bump:              "auto",
+				Prefix:            "v",
+				PrereleaseID:      "alpha",
+				MainBranchName:    "master",
+				DevelopBranchName: "develop",
+			},
+			Result: generate.Result{
+				PreviousTag:  "v0.2.1",
+				AncestorTag:  "v0.2.1-alpha.2",
+				SemverTag:    "v0.2.1-alpha.3",
 				IsPrerelease: true,
 			},
 		},
@@ -114,6 +136,7 @@ func TestTag(t *testing.T) {
 		"misc branch into develop": {
 			CurrentBranch: "develop",
 			LatestTag:     "v0.2.1-alpha.1",
+			AncestorTag:   "v0.2.0-alpha.1",
 			SourceBranch:  "misc/some",
 			Params: generate.Params{
 				CommitSha:         "81918ffc",
@@ -125,6 +148,7 @@ func TestTag(t *testing.T) {
 			},
 			Result: generate.Result{
 				PreviousTag:  "v0.2.1-alpha.1",
+				AncestorTag:  "v0.2.0-alpha.1",
 				SemverTag:    "v0.2.1-alpha.2",
 				IsPrerelease: true,
 			},

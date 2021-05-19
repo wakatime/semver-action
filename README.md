@@ -30,6 +30,12 @@ These are the prefixes we expect when `auto` bump:
         v1.5.3-pre.2 results in v1.5.3-pre.3
     ```
 
+- Source branch is prefixed with `misc/` or `doc/` and dest branch is `develop` - Increments build version.
+
+    ```text
+    v1.5.3-pre.2 results in v1.5.3-pre.3
+    ```
+
 - Source branch is prefixed with `bugfix/` and dest branch is `develop` - Increments patch version.
 
     ```text
@@ -61,11 +67,18 @@ These are the prefixes we expect when `auto` bump:
 - Source branch is `develop` and dest branch is `master` - Takes the closest tag and finalize it.
 
     ```text
-    v0.1.0 stays v0.1.0
     v1.5.3-pre.2 results in v1.5.3
     ```
 
+- Source branch is prefixed with `resync/` and dest branch is `develop` - Increments patch version.
+
+    ```text
+    v1.5.3-pre.2 results in v1.5.4-pre.1
+    ```
+
 ## Github Environment Variables
+
+Here are the environment variables we take from Github Actions so far
 
 - `GITHUB_SHA`
 

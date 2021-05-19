@@ -211,8 +211,8 @@ func TestTag(t *testing.T) {
 		},
 		"resync branch into develop": {
 			CurrentBranch: "develop",
-			LatestTag:     "v1.3.0-alpha.1",
-			AncestorTag:   "v1.2.0-alpha.2",
+			LatestTag:     "v1.3.0",
+			AncestorTag:   "v1.3.0-alpha.2",
 			SourceBranch:  "resync/master",
 			Params: generate.Params{
 				CommitSha:         "81918ffc",
@@ -223,8 +223,8 @@ func TestTag(t *testing.T) {
 				DevelopBranchName: "develop",
 			},
 			Result: generate.Result{
-				PreviousTag:  "v1.3.0-alpha.1",
-				AncestorTag:  "v1.2.0-alpha.2",
+				PreviousTag:  "v1.3.0",
+				AncestorTag:  "v1.3.0-alpha.2",
 				SemverTag:    "v1.3.1-alpha.1",
 				IsPrerelease: true,
 			},

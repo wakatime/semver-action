@@ -133,8 +133,8 @@ func (c *Client) LatestTag() string {
 }
 
 // AncestorTag returns the previous tag that matches specific pattern if found.
-func (c *Client) AncestorTag(include, branch string) string {
-	result, _ := c.Clean(c.Run("-C", c.repoDir, "describe", "--tags", "--abbrev=0", "--match", include, branch))
+func (c *Client) AncestorTag(include, exclude, branch string) string {
+	result, _ := c.Clean(c.Run("-C", c.repoDir, "describe", "--tags", "--abbrev=0", "--match", include, "--exclude", exclude, branch))
 	if result == "" {
 		result, _ = c.Clean(c.Run("-C", c.repoDir, "rev-list", "--max-parents=0", "HEAD"))
 	}

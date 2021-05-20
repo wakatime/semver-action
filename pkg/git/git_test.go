@@ -145,6 +145,7 @@ func TestLatestTag_NoTagFound(t *testing.T) {
 func TestAncestorTag(t *testing.T) {
 	tests := map[string]struct {
 		IncludePattern string
+		ExcludePattern string
 		Branch         string
 		ExpectedTag    string
 	}{
@@ -155,6 +156,7 @@ func TestAncestorTag(t *testing.T) {
 		},
 		"non-dev tag only": {
 			IncludePattern: "v[0-9]*",
+			ExcludePattern: "v[0-9]*-dev*",
 			Branch:         "master",
 			ExpectedTag:    "v1.2.0",
 		},
@@ -165,12 +167,15 @@ func TestAncestorTag(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			gc.GitCmd = func(env map[string]string, args ...string) (string, error) {
 				assert.Nil(t, env)
-				assert.Equal(t, args, []string{"-C", "/path/to/repo", "describe", "--tags", "--abbrev=0", "--match", args[6], args[7]})
+				assert.Equal(
+					t,
+					args,
+					[]string{"-C", "/path/to/repo", "describe", "--tags", "--abbrev=0", "--match", args[6], "--exclude", args[8], args[9]})
 
 				return test.ExpectedTag, nil
 			}
 
-			value := gc.AncestorTag(test.IncludePattern, test.Branch)
+			value := gc.AncestorTag(test.IncludePattern, test.ExcludePattern, test.Branch)
 
 			assert.Equal(t, test.ExpectedTag, value)
 		})
@@ -188,7 +193,10 @@ func TestAncestorTag_NoTagFound(t *testing.T) {
 
 		switch numCalls {
 		case 1:
-			assert.Equal(t, args, []string{"-C", "/path/to/repo", "describe", "--tags", "--abbrev=0", "--match", args[6], args[7]})
+			assert.Equal(
+				t,
+				args,
+				[]string{"-C", "/path/to/repo", "describe", "--tags", "--abbrev=0", "--match", args[6], "--exclude", args[8], args[9]})
 		case 2:
 			assert.Equal(t, args, []string{"-C", "/path/to/repo", "rev-list", "--max-parents=0", "HEAD"})
 		}
@@ -196,7 +204,7 @@ func TestAncestorTag_NoTagFound(t *testing.T) {
 		return "", nil
 	}
 
-	value := gc.AncestorTag("", "")
+	value := gc.AncestorTag("", "", "")
 
 	assert.Empty(t, value)
 }

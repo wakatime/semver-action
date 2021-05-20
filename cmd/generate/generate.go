@@ -28,7 +28,7 @@ type gitClient interface {
 	CurrentBranch() (string, error)
 	IsRepo() bool
 	LatestTag() string
-	AncestorTag(include, branch string) string
+	AncestorTag(include, exclude, branch string) string
 	SourceBranch(commitHash string) (string, error)
 }
 
@@ -135,7 +135,10 @@ func Tag(params Params, gc gitClient) (Result, error) {
 	// ancestor develop tag excluding pre-release part, then it will use ancestor one instead.
 	if (branchDocPrefixRegex.MatchString(source) || branchMiscPrefixRegex.MatchString(source)) &&
 		dest == params.DevelopBranchName {
-		ancestorDevelopTag := gc.AncestorTag(fmt.Sprintf("%s[0-9]*-%s*", params.Prefix, params.PrereleaseID), dest)
+		ancestorDevelopTag := gc.AncestorTag(
+			fmt.Sprintf("%s[0-9]*-%s*", params.Prefix, params.PrereleaseID),
+			"",
+			dest)
 
 		parsed, err := semver.ParseTolerant(ancestorDevelopTag)
 		if err != nil {
@@ -151,6 +154,7 @@ func Tag(params Params, gc gitClient) (Result, error) {
 		finalTag       string
 		ancestorTag    string
 		includePattern string
+		excludePattern string
 		isPrerelease   bool
 	)
 
@@ -190,15 +194,17 @@ func Tag(params Params, gc gitClient) (Result, error) {
 			includePattern = fmt.Sprintf("%s[0-9]*-%s*", params.Prefix, params.PrereleaseID)
 		} else {
 			includePattern = fmt.Sprintf("%s[0-9]*", params.Prefix)
+			excludePattern = fmt.Sprintf("%s[0-9]*-%s*", params.Prefix, params.PrereleaseID)
 		}
 
 		finalTag = params.Prefix + tag.String()
 	default:
 		includePattern = fmt.Sprintf("%s[0-9]*", params.Prefix)
+		excludePattern = fmt.Sprintf("%s[0-9]*-%s*", params.Prefix, params.PrereleaseID)
 		finalTag = params.Prefix + tag.FinalizeVersion()
 	}
 
-	ancestorTag = gc.AncestorTag(includePattern, dest)
+	ancestorTag = gc.AncestorTag(includePattern, excludePattern, dest)
 
 	return Result{
 		PreviousTag:  previousTag,

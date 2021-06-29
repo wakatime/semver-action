@@ -12,12 +12,12 @@ If `auto` bump, it will try to extract the closest tag and calculate the next se
 
 These are the prefixes we expect when `auto` bump:
 
-- `^bugfix/.*` or `^hotfix/.*` - `patch`
-- `^doc/.*` - `build`
-- `^feature/.*` - `minor`
-- `^major/.*` - `major`
-- `^misc/.*` - `build`
-- `^resync/.*` - Special case needed to resync base branch into develop when hotfix gets merged into base - Mostly from `master` into `develop`.
+- `^bugfix/.+` or `^hotfix/.+` - `patch`
+- `^docs?/.+` - `build`
+- `^feature/.+` - `minor`
+- `^major/.+` - `major`
+- `^misc/.+` - `build`
+- `^resync/.+` - Special case needed to resync base branch into develop when hotfix gets merged into base - Mostly from `master` into `develop`.
 
 ### Scenarios
 
@@ -30,7 +30,7 @@ These are the prefixes we expect when `auto` bump:
         v1.5.3-pre.2 results in v1.5.3-pre.3
     ```
 
-- Source branch is prefixed with `misc/` or `doc/` and dest branch is `develop` - Increments build version.
+- Source branch is prefixed with `misc/` or `doc(s)/` and dest branch is `develop` - Increments build version.
 
     ```text
     v1.5.3-pre.2 results in v1.5.3-pre.3

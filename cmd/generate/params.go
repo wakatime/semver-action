@@ -59,7 +59,7 @@ func LoadParams() (Params, error) {
 		bump = bumpStr
 	}
 
-	var debug bool = true
+	var debug bool
 
 	if debugStr := actions.GetInput("debug"); debugStr != "" {
 		parsed, err := strconv.ParseBool(debugStr)

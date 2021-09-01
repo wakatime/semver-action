@@ -35,9 +35,9 @@ inputs:
     required: false
   debug:
     description: 'Enables debug mode'
-    default: 'false'
+    default: 'true'
     required: false
-    
+
 outputs:
   semver_tag:
     description: 'The calculdated semantic version'

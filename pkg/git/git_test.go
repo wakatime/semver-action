@@ -108,7 +108,7 @@ func TestLatestTag(t *testing.T) {
 	gc := git.NewGit("/path/to/repo")
 	gc.GitCmd = func(env map[string]string, args ...string) (string, error) {
 		assert.Nil(t, env)
-		assert.Equal(t, args, []string{"-C", "/path/to/repo", "tag", "--points-at", "HEAD", "--sort", "-version:creatordate"})
+		assert.Equal(t, args, []string{"-C", "/path/to/repo", "tag", "--sort", "-version:creatordate"})
 
 		return "v2.4.79", nil
 	}
@@ -119,20 +119,10 @@ func TestLatestTag(t *testing.T) {
 }
 
 func TestLatestTag_NoTagFound(t *testing.T) {
-	var numCalls int
-
 	gc := git.NewGit("/path/to/repo")
 	gc.GitCmd = func(env map[string]string, args ...string) (string, error) {
-		numCalls++
-
 		assert.Nil(t, env)
-
-		switch numCalls {
-		case 1:
-			assert.Equal(t, args, []string{"-C", "/path/to/repo", "tag", "--points-at", "HEAD", "--sort", "-version:creatordate"})
-		case 2:
-			assert.Equal(t, args, []string{"-C", "/path/to/repo", "describe", "--tags", "--abbrev=0"})
-		}
+		assert.Equal(t, args, []string{"-C", "/path/to/repo", "tag", "--sort", "-version:creatordate"})
 
 		return "", nil
 	}

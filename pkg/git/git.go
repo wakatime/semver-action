@@ -125,11 +125,9 @@ func (c *Client) SourceBranch(commitHash string) (string, error) {
 
 // LatestTag returns the latest tag if found.
 func (c *Client) LatestTag() string {
-	result, _ := c.Clean(c.Run("-C", c.repoDir, "tag", "--points-at", "HEAD", "--sort", "-version:creatordate"))
-	if result == "" {
-		result, _ = c.Clean(c.Run("-C", c.repoDir, "describe", "--tags", "--abbrev=0"))
-	}
-	return result
+	result, _ := c.Clean(c.Run("-C", c.repoDir, "tag", "--sort", "-version:creatordate"))
+
+	return strings.Split(result, "\n")[0]
 }
 
 // AncestorTag returns the previous tag that matches specific pattern if found.

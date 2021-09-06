@@ -89,9 +89,7 @@ func Tag(params Params, gc gitClient) (Result, error) {
 
 	log.Debugf("method: %q, version: %q", method, version)
 
-	var (
-		tag *semver.Version
-	)
+	var tag *semver.Version
 
 	latestTag := gc.LatestTag()
 	if latestTag == "" {
@@ -132,7 +130,7 @@ func Tag(params Params, gc gitClient) (Result, error) {
 	}
 
 	// If branch is prefixed with doc or misc and the latest tag is equal to the
-	// ancestor develop tag excluding pre-release part, then it will use ancestor one instead.
+	// ancestor develop tag excluding prerelease part, then it will use ancestor one instead.
 	if (branchDocPrefixRegex.MatchString(source) || branchMiscPrefixRegex.MatchString(source)) &&
 		dest == params.DevelopBranchName {
 		ancestorDevelopTag := gc.AncestorTag(
@@ -174,7 +172,7 @@ func Tag(params Params, gc gitClient) (Result, error) {
 
 			preVersion, err := semver.NewPRVersion(params.PrereleaseID)
 			if err != nil {
-				return Result{}, fmt.Errorf("failed to create new pre-release version: %s", err)
+				return Result{}, fmt.Errorf("failed to create new prerelease version: %s", err)
 			}
 
 			tag.Pre = append(tag.Pre, preVersion)

@@ -105,10 +105,21 @@ func TestSourceBranch_NotValiddBranchName(t *testing.T) {
 }
 
 func TestLatestTag(t *testing.T) {
+	var numCalls int
+
 	gc := git.NewGit("/path/to/repo")
 	gc.GitCmd = func(env map[string]string, args ...string) (string, error) {
+		numCalls++
+
 		assert.Nil(t, env)
-		assert.Equal(t, args, []string{"-C", "/path/to/repo", "tag", "--sort", "-version:creatordate"})
+
+		switch numCalls {
+		case 1:
+			assert.Equal(t, args, []string{"-C", "/path/to/repo", "rev-list", "--tags", "--max-count=1"})
+			return "da81ce0ec20cab645ffe03e760dad1cdfccf7c94", nil
+		case 2:
+			assert.Equal(t, args, []string{"-C", "/path/to/repo", "describe", "--tags", "da81ce0ec20cab645ffe03e760dad1cdfccf7c94"})
+		}
 
 		return "v2.4.79", nil
 	}
@@ -122,7 +133,7 @@ func TestLatestTag_NoTagFound(t *testing.T) {
 	gc := git.NewGit("/path/to/repo")
 	gc.GitCmd = func(env map[string]string, args ...string) (string, error) {
 		assert.Nil(t, env)
-		assert.Equal(t, args, []string{"-C", "/path/to/repo", "tag", "--sort", "-version:creatordate"})
+		assert.Equal(t, args, []string{"-C", "/path/to/repo", "rev-list", "--tags", "--max-count=1"})
 
 		return "", nil
 	}

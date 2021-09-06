@@ -18,7 +18,7 @@ inputs:
     default: 'v'
     required: false
   prerelease_id:
-    description: 'Text representing the pre-release identifier'
+    description: 'Text representing the prerelease identifier'
     default: 'pre'
     required: false
   main_branch_name:
@@ -42,7 +42,7 @@ outputs:
   semver_tag:
     description: 'The calculdated semantic version'
   is_prerelease:
-    description: 'True if calculated tag is pre-release'
+    description: 'True if calculated tag is prerelease'
   previous_tag:
     description: 'The tag used to calculate next semantic version'
   ancestor_tag:

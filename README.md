@@ -23,7 +23,7 @@ These are the prefixes we expect when `auto` bump:
 
 #### Auto Bump
 
-- Not a valid source branch prefix - Increments pre-release version.
+- Not a valid source branch prefix - Increments prerelease version.
 
     ```text
         v0.1.0 results in v0.1.0-pre.1
@@ -117,7 +117,7 @@ Uses `auto` bump strategy to calculate the next semantic version.
 | bump                |          | Bump strategy for semantic versioning. Can be `auto`, `major`, `minor`, `patch`. | auto        |
 | base_version        |          | Version to use as base for the generation, skips version bumps.                  |             |
 | prefix              |          | Prefix used to prepend the final version.                                        | v           |
-| prerelease_id       |          | Text representing the pre-release identifier.                                    | pre         |
+| prerelease_id       |          | Text representing the prerelease identifier.                                    | pre         |
 | main_branch_name    |          | The main branch name.                                                            | master      |
 | develop_branch_name |          | The develop branch name.                                                         | develop     |
 | repo_dir            |          | The repository path.                                                             | current dir |
@@ -128,6 +128,6 @@ Uses `auto` bump strategy to calculate the next semantic version.
 | parameter     | description                                      |
 | ---           | ---                                              |
 | semver_tag    | The calculdated semantic version.                |
-| is_prerelease | True if calculated tag is pre-release.           |
+| is_prerelease | True if calculated tag is prerelease.           |
 | previous_tag  | The tag used to calculate next semantic version. |
 | ancestor_tag  | The ancestor tag based on specific pattern.      |

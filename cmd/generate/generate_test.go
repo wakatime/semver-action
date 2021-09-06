@@ -77,7 +77,7 @@ func TestTag(t *testing.T) {
 				IsPrerelease: true,
 			},
 		},
-		"doc branch into develop when latest tag is equal to ancestor develop tag excluding pre-release part": {
+		"doc branch into develop when latest tag is equal to ancestor develop tag excluding prerelease part": {
 			CurrentBranch: "develop",
 			LatestTag:     "v0.2.1",
 			AncestorTag:   "v0.2.1-alpha.2",

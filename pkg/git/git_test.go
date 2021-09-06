@@ -118,7 +118,9 @@ func TestLatestTag(t *testing.T) {
 			assert.Equal(t, args, []string{"-C", "/path/to/repo", "rev-list", "--tags", "--max-count=1"})
 			return "da81ce0ec20cab645ffe03e760dad1cdfccf7c94", nil
 		case 2:
-			assert.Equal(t, args, []string{"-C", "/path/to/repo", "describe", "--tags", "da81ce0ec20cab645ffe03e760dad1cdfccf7c94"})
+			assert.Equal(t, args, []string{
+				"-C", "/path/to/repo", "describe", "--tags", "da81ce0ec20cab645ffe03e760dad1cdfccf7c94"},
+			)
 		}
 
 		return "v2.4.79", nil
@@ -164,6 +166,7 @@ func TestAncestorTag(t *testing.T) {
 	}
 
 	gc := git.NewGit("/path/to/repo")
+
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			gc.GitCmd = func(env map[string]string, args ...string) (string, error) {
@@ -171,7 +174,10 @@ func TestAncestorTag(t *testing.T) {
 				assert.Equal(
 					t,
 					args,
-					[]string{"-C", "/path/to/repo", "describe", "--tags", "--abbrev=0", "--match", args[6], "--exclude", args[8], args[9]})
+					[]string{
+						"-C", "/path/to/repo", "describe", "--tags", "--abbrev=0",
+						"--match", args[6], "--exclude", args[8], args[9]},
+				)
 
 				return test.ExpectedTag, nil
 			}
@@ -197,7 +203,9 @@ func TestAncestorTag_NoTagFound(t *testing.T) {
 			assert.Equal(
 				t,
 				args,
-				[]string{"-C", "/path/to/repo", "describe", "--tags", "--abbrev=0", "--match", args[6], "--exclude", args[8], args[9]})
+				[]string{
+					"-C", "/path/to/repo", "describe", "--tags", "--abbrev=0",
+					"--match", args[6], "--exclude", args[8], args[9]})
 		case 2:
 			assert.Equal(t, args, []string{"-C", "/path/to/repo", "rev-list", "--max-parents=0", "HEAD"})
 		}

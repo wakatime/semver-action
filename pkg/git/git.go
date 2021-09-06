@@ -32,6 +32,7 @@ func gitCmdFn(env map[string]string, args ...string) (string, error) {
 	var extraArgs = []string{
 		"-c", "log.showSignature=false",
 	}
+
 	args = append(extraArgs, args...)
 	/* #nosec */
 	var cmd = exec.Command("git", args...)
@@ -50,6 +51,7 @@ func gitCmdFn(env map[string]string, args ...string) (string, error) {
 	cmd.Stderr = &stderr
 
 	log.WithField("args", args).Debug("running git")
+
 	err := cmd.Run()
 
 	log.WithField("stdout", stdout.String()).
@@ -66,6 +68,7 @@ func gitCmdFn(env map[string]string, args ...string) (string, error) {
 // Clean the output.
 func (c *Client) Clean(output string, err error) (string, error) {
 	output = strings.ReplaceAll(strings.Split(output, "\n")[0], "'", "")
+
 	if err != nil {
 		err = errors.New(strings.TrimSuffix(err.Error(), "\n"))
 	}
@@ -104,6 +107,7 @@ func (c *Client) SourceBranch(commitHash string) (string, error) {
 	match := mergePRRegex.FindStringSubmatch(message)
 
 	paramsMap := make(map[string]string)
+
 	for i, name := range mergePRRegex.SubexpNames() {
 		if i > 0 && i <= len(match) {
 			paramsMap[name] = match[i]
@@ -137,9 +141,12 @@ func (c *Client) LatestTag() string {
 
 // AncestorTag returns the previous tag that matches specific pattern if found.
 func (c *Client) AncestorTag(include, exclude, branch string) string {
-	result, _ := c.Clean(c.Run("-C", c.repoDir, "describe", "--tags", "--abbrev=0", "--match", include, "--exclude", exclude, branch))
+	result, _ := c.Clean(c.Run(
+		"-C", c.repoDir, "describe", "--tags", "--abbrev=0",
+		"--match", include, "--exclude", exclude, branch))
 	if result == "" {
 		result, _ = c.Clean(c.Run("-C", c.repoDir, "rev-list", "--max-parents=0", "HEAD"))
 	}
+
 	return result
 }

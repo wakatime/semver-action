@@ -395,26 +395,26 @@ func initGitClientMock(
 }
 
 func (m *gitClientMock) CurrentBranch() (string, error) {
-	m.CurrentBranchFnInvoked += 1
+	m.CurrentBranchFnInvoked++
 	return m.CurrentBranchFn()
 }
 func (m *gitClientMock) IsRepo() bool {
-	m.IsRepoFnInvoked += 1
+	m.IsRepoFnInvoked++
 	return m.IsRepoFn()
 }
 
 func (m *gitClientMock) LatestTag() string {
-	m.LatestTagFnInvoked += 1
+	m.LatestTagFnInvoked++
 	return m.LatestTagFn()
 }
 
 func (m *gitClientMock) AncestorTag(include, exclude, branch string) string {
-	m.AncestorTagFnInvoked += 1
+	m.AncestorTagFnInvoked++
 	return m.AncestorTagFn(include, exclude, branch)
 }
 
 func (m *gitClientMock) SourceBranch(commitHash string) (string, error) {
-	m.SourceBranchFnInvoked += 1
+	m.SourceBranchFnInvoked++
 	return m.SourceBranchFn(commitHash)
 }
 

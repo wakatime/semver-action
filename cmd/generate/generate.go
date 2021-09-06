@@ -60,6 +60,7 @@ func Run() (Result, error) {
 }
 
 // Tag returns the calculated semantica version.
+// nolint:gocyclo
 func Tag(params Params, gc gitClient) (Result, error) {
 	if !gc.IsRepo() {
 		return Result{}, fmt.Errorf("current folder is not a git repository")
@@ -110,6 +111,7 @@ func Tag(params Params, gc gitClient) (Result, error) {
 
 	if (version == "major" && method == "build") || method == "major" {
 		log.Debug("incrementing major")
+
 		if err := tag.IncrementMajor(); err != nil {
 			return Result{}, fmt.Errorf("failed to increment major version: %s", err)
 		}
@@ -117,6 +119,7 @@ func Tag(params Params, gc gitClient) (Result, error) {
 
 	if (version == "minor" && method == "build") || method == "minor" {
 		log.Debug("incrementing minor")
+
 		if err := tag.IncrementMinor(); err != nil {
 			return Result{}, fmt.Errorf("failed to increment minor version: %s", err)
 		}
@@ -124,6 +127,7 @@ func Tag(params Params, gc gitClient) (Result, error) {
 
 	if (version == "patch" && method == "build") || method == "patch" || method == "hotfix" {
 		log.Debug("incrementing patch")
+
 		if err := tag.IncrementPatch(); err != nil {
 			return Result{}, fmt.Errorf("failed to increment patch version: %s", err)
 		}

@@ -13,13 +13,13 @@ import (
 
 // nolint: gochecknoglobals
 var (
-	branchBugfixPrefixRegex  = regexp.MustCompile(`(?i)^bugfix/.+`)
-	branchDocPrefixRegex     = regexp.MustCompile(`(?i)^docs?/.+`)
-	branchFeaturePrefixRegex = regexp.MustCompile(`(?i)^feature/.+`)
-	branchHotfixPrefixRegex  = regexp.MustCompile(`(?i)^hotfix/.+`)
-	branchMajorPrefixRegex   = regexp.MustCompile(`(?i)^major/.+`)
-	branchMiscPrefixRegex    = regexp.MustCompile(`(?i)^misc/.+`)
-	branchResyncPrefixRegex  = regexp.MustCompile(`(?i)^resync/.+`)
+	branchBugfixPrefixRegex  = regexp.MustCompile(`(?i)^(.+:)?(bugfix/.+)`)
+	branchDocPrefixRegex     = regexp.MustCompile(`(?i)^(.+:)?(docs?/.+)`)
+	branchFeaturePrefixRegex = regexp.MustCompile(`(?i)^(.+:)?(feature/.+)`)
+	branchHotfixPrefixRegex  = regexp.MustCompile(`(?i)^(.+:)?(hotfix/.+)`)
+	branchMajorPrefixRegex   = regexp.MustCompile(`(?i)^(.+:)?(major/.+)`)
+	branchMiscPrefixRegex    = regexp.MustCompile(`(?i)^(.+:)?(misc/.+)`)
+	branchResyncPrefixRegex  = regexp.MustCompile(`(?i)^(.+:)?(resync/.+)`)
 )
 
 const tagDefault = "0.0.0"
@@ -74,7 +74,7 @@ func Tag(params Params, gc gitClient) (Result, error) {
 
 	dest, err := gc.CurrentBranch()
 	if err != nil {
-		return Result{}, fmt.Errorf("failed to extract dest branche from commit: %s", err)
+		return Result{}, fmt.Errorf("failed to extract dest branch from commit: %s", err)
 	}
 
 	log.Debugf("dest branch: %q\n", dest)

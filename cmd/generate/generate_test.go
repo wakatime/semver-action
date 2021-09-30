@@ -115,10 +115,46 @@ func TestTag(t *testing.T) {
 				IsPrerelease: true,
 			},
 		},
+		"upstream feature branch into develop": {
+			CurrentBranch: "develop",
+			LatestTag:     "v0.2.1",
+			SourceBranch:  "some-user:feature/some",
+			Params: generate.Params{
+				CommitSha:         "81918ffc",
+				Bump:              "auto",
+				Prefix:            "v",
+				PrereleaseID:      "alpha",
+				MainBranchName:    "master",
+				DevelopBranchName: "develop",
+			},
+			Result: generate.Result{
+				PreviousTag:  "v0.2.1",
+				SemverTag:    "v0.3.0-alpha.1",
+				IsPrerelease: true,
+			},
+		},
 		"bugfix branch into develop": {
 			CurrentBranch: "develop",
 			LatestTag:     "v0.2.1",
 			SourceBranch:  "bugfix/some",
+			Params: generate.Params{
+				CommitSha:         "81918ffc",
+				Bump:              "auto",
+				Prefix:            "v",
+				PrereleaseID:      "alpha",
+				MainBranchName:    "master",
+				DevelopBranchName: "develop",
+			},
+			Result: generate.Result{
+				PreviousTag:  "v0.2.1",
+				SemverTag:    "v0.2.2-alpha.1",
+				IsPrerelease: true,
+			},
+		},
+		"upstream bugfix branch into develop": {
+			CurrentBranch: "develop",
+			LatestTag:     "v0.2.1",
+			SourceBranch:  "some-user:bugfix/some",
 			Params: generate.Params{
 				CommitSha:         "81918ffc",
 				Bump:              "auto",
@@ -138,6 +174,26 @@ func TestTag(t *testing.T) {
 			LatestTag:     "v0.2.1-alpha.1",
 			AncestorTag:   "v0.2.0-alpha.1",
 			SourceBranch:  "misc/some",
+			Params: generate.Params{
+				CommitSha:         "81918ffc",
+				Bump:              "auto",
+				Prefix:            "v",
+				PrereleaseID:      "alpha",
+				MainBranchName:    "master",
+				DevelopBranchName: "develop",
+			},
+			Result: generate.Result{
+				PreviousTag:  "v0.2.1-alpha.1",
+				AncestorTag:  "v0.2.0-alpha.1",
+				SemverTag:    "v0.2.1-alpha.2",
+				IsPrerelease: true,
+			},
+		},
+		"upstream misc branch into develop": {
+			CurrentBranch: "develop",
+			LatestTag:     "v0.2.1-alpha.1",
+			AncestorTag:   "v0.2.0-alpha.1",
+			SourceBranch:  "some-user:misc/some",
 			Params: generate.Params{
 				CommitSha:         "81918ffc",
 				Bump:              "auto",

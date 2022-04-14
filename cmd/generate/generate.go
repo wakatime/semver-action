@@ -63,13 +63,13 @@ func Run() (Result, error) {
 // Tag returns the calculated semantica version.
 // nolint:gocyclo
 func Tag(params Params, gc gitClient) (Result, error) {
-	if !gc.IsRepo() {
-		return Result{}, fmt.Errorf("current folder is not a git repository")
-	}
-
 	err := gc.MakeSafe()
 	if err != nil {
 		return Result{}, fmt.Errorf("failed to make safe: %s", err)
+	}
+
+	if !gc.IsRepo() {
+		return Result{}, fmt.Errorf("current folder is not a git repository")
 	}
 
 	tagSource := "git"

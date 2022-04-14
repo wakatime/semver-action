@@ -400,6 +400,9 @@ func TestTag(t *testing.T) {
 
 func TestTag_IsNotRepo(t *testing.T) {
 	gc := &gitClientMock{
+		MakeSafeFn: func() error {
+			return nil
+		},
 		IsRepoFn: func() bool {
 			return false
 		},
@@ -413,9 +416,6 @@ func TestTag_IsNotRepo(t *testing.T) {
 
 func TestTag_MakeSafeErr(t *testing.T) {
 	gc := &gitClientMock{
-		IsRepoFn: func() bool {
-			return true
-		},
 		MakeSafeFn: func() error {
 			return errors.New("error")
 		},

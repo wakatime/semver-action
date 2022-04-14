@@ -1,6 +1,7 @@
 package generate_test
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/wakatime/semver-action/cmd/generate"
@@ -410,11 +411,29 @@ func TestTag_IsNotRepo(t *testing.T) {
 	assert.EqualError(t, err, "current folder is not a git repository")
 }
 
+func TestTag_MakeSafeErr(t *testing.T) {
+	gc := &gitClientMock{
+		IsRepoFn: func() bool {
+			return true
+		},
+		MakeSafeFn: func() error {
+			return errors.New("error")
+		},
+	}
+
+	_, err := generate.Tag(generate.Params{}, gc)
+	require.Error(t, err)
+
+	assert.EqualError(t, err, "failed to make safe: error")
+}
+
 type gitClientMock struct {
 	CurrentBranchFn        func() (string, error)
 	CurrentBranchFnInvoked int
 	IsRepoFn               func() bool
 	IsRepoFnInvoked        int
+	MakeSafeFn             func() error
+	MakeSafeFnInvoked      int
 	LatestTagFn            func() string
 	LatestTagFnInvoked     int
 	AncestorTagFn          func(include, exclude, branch string) string
@@ -437,6 +456,9 @@ func initGitClientMock(
 		IsRepoFn: func() bool {
 			return true
 		},
+		MakeSafeFn: func() error {
+			return nil
+		},
 		LatestTagFn: func() string {
 			return latestTag
 		},
@@ -454,6 +476,12 @@ func (m *gitClientMock) CurrentBranch() (string, error) {
 	m.CurrentBranchFnInvoked++
 	return m.CurrentBranchFn()
 }
+
+func (m *gitClientMock) MakeSafe() error {
+	m.MakeSafeFnInvoked++
+	return m.MakeSafeFn()
+}
+
 func (m *gitClientMock) IsRepo() bool {
 	m.IsRepoFnInvoked++
 	return m.IsRepoFn()

@@ -43,13 +43,13 @@ func LoadParams() (Params, error) {
 		commitSha = commitShaStr
 	}
 
-	var repoDir string = "."
+	var repoDir = "."
 
 	if repoDirStr := actions.GetInput("repo_dir"); repoDirStr != "" {
 		repoDir = repoDirStr
 	}
 
-	var bump string = "auto"
+	var bump = "auto"
 
 	if bumpStr := actions.GetInput("bump"); bumpStr != "" {
 		if !stringInSlice(bumpStr, validBumpStrategies) {
@@ -70,7 +70,7 @@ func LoadParams() (Params, error) {
 		debug = parsed
 	}
 
-	var prefix string = "v"
+	var prefix = "v"
 
 	if prefixStr := actions.GetInput("prefix"); prefixStr != "" {
 		prefix = prefixStr
@@ -90,19 +90,19 @@ func LoadParams() (Params, error) {
 		baseVersion = &parsed
 	}
 
-	var mainBranchName string = "master"
+	var mainBranchName = "master"
 
 	if mainBranchNameStr := actions.GetInput("main_branch_name"); mainBranchNameStr != "" {
 		mainBranchName = mainBranchNameStr
 	}
 
-	var developBranchName string = "develop"
+	var developBranchName = "develop"
 
 	if developBranchNameStr := actions.GetInput("develop_branch_name"); developBranchNameStr != "" {
 		developBranchName = developBranchNameStr
 	}
 
-	var prereleaseID string = "pre"
+	var prereleaseID = "pre"
 
 	if prereleaseIDStr := actions.GetInput("prerelease_id"); prereleaseIDStr != "" {
 		prereleaseID = prereleaseIDStr

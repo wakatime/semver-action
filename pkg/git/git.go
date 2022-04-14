@@ -67,7 +67,7 @@ func gitCmdFn(env map[string]string, args ...string) (string, error) {
 }
 
 // Clean the output.
-func (c *Client) Clean(output string, err error) (string, error) {
+func (Client) Clean(output string, err error) (string, error) {
 	output = strings.ReplaceAll(strings.Split(output, "\n")[0], "'", "")
 
 	if err != nil {

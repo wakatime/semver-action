@@ -27,6 +27,7 @@ const tagDefault = "0.0.0"
 type gitClient interface {
 	CurrentBranch() (string, error)
 	IsRepo() bool
+	MakeSafe() error
 	LatestTag() string
 	AncestorTag(include, exclude, branch string) string
 	SourceBranch(commitHash string) (string, error)
@@ -64,6 +65,11 @@ func Run() (Result, error) {
 func Tag(params Params, gc gitClient) (Result, error) {
 	if !gc.IsRepo() {
 		return Result{}, fmt.Errorf("current folder is not a git repository")
+	}
+
+	err := gc.MakeSafe()
+	if err != nil {
+		return Result{}, fmt.Errorf("failed to make safe: %s", err)
 	}
 
 	tagSource := "git"

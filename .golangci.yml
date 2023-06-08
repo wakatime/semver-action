@@ -1,5 +1,7 @@
 run:
-  deadline: 5m
+  timeout: 5m
+  skip-dirs:
+    - "testdata"
 linters:
   enable:
     - bodyclose
@@ -24,7 +26,6 @@ linters-settings:
       - name: blank-imports
       - name: duplicated-imports
       - name: dot-imports
-      - name: package-comments
       - name: exported
       - name: superfluous-else
       - name: indent-error-flow
@@ -44,5 +45,11 @@ linters-settings:
       - name: unused-parameter
       - name: unused-receiver
 issues:
+  exclude-use-default: false
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - errcheck
+        - gosec
   include:
     - EXC0002

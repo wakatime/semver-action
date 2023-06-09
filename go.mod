@@ -1,11 +1,12 @@
 module github.com/wakatime/semver-action
 
-go 1.18
+go 1.20
 
 require (
 	github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38
 	github.com/apex/log v1.9.0
 	github.com/blang/semver/v4 v4.0.0
+	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/stretchr/testify v1.7.0
 )
 

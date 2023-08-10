@@ -116,8 +116,8 @@ Uses `auto` bump strategy to calculate the next semantic version.
 | ---                 | ---      | ---                                                                              | ---         |
 | bump                |          | Bump strategy for semantic versioning. Can be `auto`, `major`, `minor`, `patch`. | auto        |
 | base_version        |          | Version to use as base for the generation, skips version bumps.                  |             |
-| prefix              |          | Prefix used to prepend the final version.                                        | v           |
-| prerelease_id       |          | Text representing the prerelease identifier.                                    | pre         |
+| prefix              |          | Prefix used to prepend the final version, for ex: `"v"`.                         |             |
+| prerelease_id       |          | Text representing the prerelease identifier.                                     | pre         |
 | main_branch_name    |          | The main branch name.                                                            | master      |
 | develop_branch_name |          | The develop branch name.                                                         | develop     |
 | repo_dir            |          | The repository path.                                                             | current dir |

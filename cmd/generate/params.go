@@ -70,7 +70,7 @@ func LoadParams() (Params, error) {
 		debug = parsed
 	}
 
-	var prefix = "v"
+	var prefix = ""
 
 	if prefixStr := actions.GetInput("prefix"); prefixStr != "" {
 		prefix = prefixStr
